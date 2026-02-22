@@ -1,0 +1,3184 @@
+{
+  "id": "chat",
+  "title": "Design a Chat System",
+  "problemStatement": "Design Design a Chat System\nDesign Design a Chat System\nDesign Design a Chat System\nBuild a 1:1 and group chat like WhatsApp. Messages must be delivered in order, support read receipts, and work offline.",
+  "functionalRequirements": [
+    "Build a 1:1 and group chat like WhatsApp. Messages must be delivered in order, support read receipts, and wor…",
+    "Send/receive 1:1 messages",
+    "Build a 1:1 and group chat like WhatsApp. Messages must be delivered in order, support read receipts, and wor…",
+    "Send/receive 1:1 messages",
+    "Group chats (create, add, leave)",
+    "Build a 1:1 and group chat like WhatsApp. Messages must be delivered in order, support read receipts, and wor…",
+    "Send/receive 1:1 messages",
+    "Group chats (create, add, leave)",
+    "Message ordering per conversation",
+    "Offline message sync"
+  ],
+  "nonFunctionalRequirements": [
+    "System should be scalable and available",
+    "System should be scalable and available",
+    "System should be scalable and available",
+    "System should be scalable and available",
+    "System should be scalable and available",
+    "System should be scalable and available"
+  ],
+  "constraintsAssumptions": [
+    "Assume standard cloud infrastructure",
+    "Assume moderate initial scale",
+    "Assume eventual consistency acceptable where appropriate",
+    "Assume single region initially",
+    "Assume existing auth system"
+  ],
+  "apiSketch": [
+    {
+      "method": "POST",
+      "path": "/api/create",
+      "purpose": "Create resource"
+    },
+    {
+      "method": "GET",
+      "path": "/api/:id",
+      "purpose": "Fetch resource"
+    },
+    {
+      "method": "GET",
+      "path": "/api/list",
+      "purpose": "List with pagination"
+    }
+  ],
+  "dataModel": [
+    {
+      "entity": "Resource",
+      "fields": [
+        "id",
+        "data",
+        "createdAt"
+      ]
+    },
+    {
+      "entity": "User",
+      "fields": [
+        "id",
+        "metadata"
+      ]
+    }
+  ],
+  "diagramSpec": {
+    "nodes": [
+      {
+        "id": "web-app",
+        "type": "web-app",
+        "label": "Web App / UI",
+        "category": "client",
+        "description": "Client-facing UI; calls APIs; manages user interactions.",
+        "data": {
+          "notes": {
+            "purpose": "Client-facing UI; calls APIs; manages user interactions.",
+            "keyDecisions": [
+              "Configure cache",
+              "Follow best practices for scale"
+            ],
+            "failureModes": [
+              "stale UI state",
+              "over-fetching"
+            ]
+          }
+        },
+        "details": {
+          "purpose": "Client-facing UI; calls APIs; manages user interactions.",
+          "defaults": {
+            "cache": "",
+            "prefetch": "",
+            "offlineMode": ""
+          },
+          "notes": {
+            "purpose": "Client-facing UI; calls APIs; manages user interactions.",
+            "keyDecisions": [
+              "Configure cache",
+              "Follow best practices for scale"
+            ],
+            "failureModes": [
+              "stale UI state",
+              "over-fetching"
+            ]
+          }
+        },
+        "justification": {
+          "reasons": [
+            {
+              "type": "FR",
+              "text": "User entry point for chat UI"
+            },
+            {
+              "type": "NFR",
+              "text": "Required for any chat client"
+            }
+          ],
+          "tradeoffs": "",
+          "failureModes": "",
+          "metrics": {}
+        }
+      },
+      {
+        "id": "load-balancer-l7",
+        "type": "load-balancer-l7",
+        "label": "Load Balancer (L7)",
+        "category": "edge",
+        "description": "Distributes HTTP traffic across healthy instances; supports routing rules.",
+        "data": {
+          "notes": {
+            "purpose": "Distributes HTTP traffic across healthy instances; supports routing rules.",
+            "keyDecisions": [
+              "Configure algorithm",
+              "Follow best practices for scale"
+            ],
+            "failureModes": [
+              "bad health checks flapping",
+              "uneven load distribution"
+            ]
+          }
+        },
+        "details": {
+          "purpose": "Distributes HTTP traffic across healthy instances; supports routing rules.",
+          "defaults": {
+            "algorithm": "",
+            "healthChecks": "",
+            "timeouts": "",
+            "connectionDraining": ""
+          },
+          "notes": {
+            "purpose": "Distributes HTTP traffic across healthy instances; supports routing rules.",
+            "keyDecisions": [
+              "Configure algorithm",
+              "Follow best practices for scale"
+            ],
+            "failureModes": [
+              "bad health checks flapping",
+              "uneven load distribution"
+            ]
+          }
+        },
+        "justification": {
+          "reasons": [
+            {
+              "type": "FR",
+              "text": "Distribute traffic to gateways"
+            },
+            {
+              "type": "NFR",
+              "text": "HA and load distribution"
+            }
+          ],
+          "tradeoffs": "",
+          "failureModes": "",
+          "metrics": {}
+        }
+      },
+      {
+        "id": "api-gateway",
+        "type": "api-gateway",
+        "label": "API Gateway",
+        "category": "edge",
+        "description": "Single entry point for APIs; handles routing, auth, quotas, request shaping.",
+        "data": {
+          "notes": {
+            "purpose": "Single entry point for APIs; handles routing, auth, quotas, request shaping.",
+            "keyDecisions": [
+              "Route by path/version; validate auth before backend",
+              "Centralize rate limits and request shaping"
+            ],
+            "failureModes": [
+              "SPOF; deploy HA with health checks",
+              "Misconfigured routes cause 404/5xx"
+            ]
+          }
+        },
+        "details": {
+          "purpose": "Single entry point for APIs; handles routing, auth, quotas, request shaping.",
+          "defaults": {
+            "routes": "",
+            "auth": "",
+            "quotas": "",
+            "timeouts": "",
+            "payloadLimits": ""
+          },
+          "notes": {
+            "purpose": "Single entry point for APIs; handles routing, auth, quotas, request shaping.",
+            "keyDecisions": [
+              "Route by path/version; validate auth before backend",
+              "Centralize rate limits and request shaping"
+            ],
+            "failureModes": [
+              "SPOF; deploy HA with health checks",
+              "Misconfigured routes cause 404/5xx"
+            ]
+          }
+        },
+        "justification": {
+          "reasons": [
+            {
+              "type": "FAILURE_MITIGATION",
+              "text": "SPOF; needs HA deployment"
+            },
+            {
+              "type": "FR",
+              "text": "Single API entry, auth, routing"
+            },
+            {
+              "type": "NFR",
+              "text": "Request shaping and quotas"
+            }
+          ],
+          "tradeoffs": "single point of failure; misconfigured routing; latency overhead",
+          "failureModes": "single point of failure; misconfigured routing; latency overhead",
+          "metrics": {}
+        }
+      },
+      {
+        "id": "edge-rate-limiter",
+        "type": "edge-rate-limiter",
+        "label": "Rate Limiter",
+        "category": "reliability",
+        "description": "Protects systems from overload and abuse; enforces per-user/IP/API limits.",
+        "data": {
+          "notes": {
+            "purpose": "Protects systems from overload and abuse; enforces per-user/IP/API limits.",
+            "keyDecisions": [
+              "Token bucket or sliding window per user/IP",
+              "Distributed state (Redis) for global limits"
+            ],
+            "failureModes": [
+              "Hot keys on limiter storage",
+              "Incorrect keying causes unfair limits"
+            ]
+          }
+        },
+        "details": {
+          "purpose": "Protects systems from overload and abuse; enforces per-user/IP/API limits.",
+          "defaults": {
+            "limitKey": "",
+            "limits": "",
+            "burst": "",
+            "window": "",
+            "tokenBucket": "",
+            "leakyBucket": ""
+          },
+          "notes": {
+            "purpose": "Protects systems from overload and abuse; enforces per-user/IP/API limits.",
+            "keyDecisions": [
+              "Token bucket or sliding window per user/IP",
+              "Distributed state (Redis) for global limits"
+            ],
+            "failureModes": [
+              "Hot keys on limiter storage",
+              "Incorrect keying causes unfair limits"
+            ]
+          }
+        },
+        "justification": {
+          "reasons": [
+            {
+              "type": "FAILURE_MITIGATION",
+              "text": "Protects downstream from traffic spikes"
+            },
+            {
+              "type": "NFR",
+              "text": "Abuse protection and fairness"
+            }
+          ],
+          "tradeoffs": "hot keys on limiter storage; incorrect keying causing unfair limits",
+          "failureModes": "hot keys on limiter storage; incorrect keying causing unfair limits",
+          "metrics": {}
+        }
+      },
+      {
+        "id": "auth-service",
+        "type": "auth-service",
+        "label": "Auth Service",
+        "category": "security",
+        "description": "Issues/validates credentials (sessions, tokens); enforces authentication flows.",
+        "data": {
+          "notes": {
+            "purpose": "Issues/validates credentials (sessions, tokens); enforces authentication flows.",
+            "keyDecisions": [
+              "JWT vs session; token refresh flow",
+              "Validate on gateway or service mesh"
+            ],
+            "failureModes": [
+              "Token replay if not bound to request",
+              "Session store overload"
+            ]
+          }
+        },
+        "details": {
+          "purpose": "Issues/validates credentials (sessions, tokens); enforces authentication flows.",
+          "defaults": {
+            "tokenTTL": "",
+            "refreshTTL": "",
+            "rotation": "",
+            "mfa": ""
+          },
+          "notes": {
+            "purpose": "Issues/validates credentials (sessions, tokens); enforces authentication flows.",
+            "keyDecisions": [
+              "JWT vs session; token refresh flow",
+              "Validate on gateway or service mesh"
+            ],
+            "failureModes": [
+              "Token replay if not bound to request",
+              "Session store overload"
+            ]
+          }
+        },
+        "justification": {
+          "reasons": [
+            {
+              "type": "FAILURE_MITIGATION",
+              "text": "Auth failure blocks all requests; needs redundancy"
+            },
+            {
+              "type": "FR",
+              "text": "Login, session, token issuance"
+            },
+            {
+              "type": "NFR",
+              "text": "Security and identity"
+            }
+          ],
+          "tradeoffs": "token replay if not bound; clock skew issues; session store overload",
+          "failureModes": "token replay if not bound; clock skew issues; session store overload",
+          "metrics": {}
+        }
+      },
+      {
+        "id": "realtime-gateway",
+        "type": "realtime-gateway",
+        "label": "Realtime Gateway (WebSocket)",
+        "category": "edge",
+        "description": "Maintains WebSocket connections for real-time bidirectional messaging; routes messages to connected clients.",
+        "data": {
+          "notes": {
+            "purpose": "Maintains WebSocket connections for real-time bidirectional messaging; routes messages to connected clients.",
+            "keyDecisions": [
+              "Sticky sessions for WebSocket affinity",
+              "Heartbeat/keepalive to detect dead connections"
+            ],
+            "failureModes": [
+              "Connection storms on mass reconnect",
+              "Stale connections after instance failover"
+            ]
+          }
+        },
+        "details": {
+          "purpose": "Maintains WebSocket connections for real-time bidirectional messaging; routes messages to connected clients.",
+          "defaults": {
+            "connectionTimeout": "",
+            "heartbeatInterval": "",
+            "maxConnectionsPerInstance": "",
+            "stickySessions": ""
+          },
+          "notes": {
+            "purpose": "Maintains WebSocket connections for real-time bidirectional messaging; routes messages to connected clients.",
+            "keyDecisions": [
+              "Sticky sessions for WebSocket affinity",
+              "Heartbeat/keepalive to detect dead connections"
+            ],
+            "failureModes": [
+              "Connection storms on mass reconnect",
+              "Stale connections after instance failover"
+            ]
+          }
+        },
+        "justification": {
+          "reasons": [
+            {
+              "type": "FAILURE_MITIGATION",
+              "text": "Connection storms on reconnect; stale after failover"
+            },
+            {
+              "type": "FR",
+              "text": "WebSocket connections for real-time delivery"
+            },
+            {
+              "type": "NFR",
+              "text": "Low-latency bidirectional messaging"
+            }
+          ],
+          "tradeoffs": "connection storms on reconnect; stale connections after instance failover",
+          "failureModes": "connection storms on reconnect; stale connections after instance failover",
+          "metrics": {}
+        }
+      },
+      {
+        "id": "presence-service",
+        "type": "presence-service",
+        "label": "Presence Service",
+        "category": "compute",
+        "description": "Tracks online/offline status of users; supports last-seen, typing indicators, and room membership.",
+        "data": {
+          "notes": {
+            "purpose": "Tracks online/offline status of users; supports last-seen, typing indicators, and room membership.",
+            "keyDecisions": [
+              "Heartbeat TTL; sliding window for last-seen",
+              "Shard by userId for scale"
+            ],
+            "failureModes": [
+              "Stale presence after client crash",
+              "Hot keys for popular users"
+            ]
+          }
+        },
+        "details": {
+          "purpose": "Tracks online/offline status of users; supports last-seen, typing indicators, and room membership.",
+          "defaults": {
+            "heartbeatTTL": "",
+            "slidingWindow": "",
+            "shardingKey": ""
+          },
+          "notes": {
+            "purpose": "Tracks online/offline status of users; supports last-seen, typing indicators, and room membership.",
+            "keyDecisions": [
+              "Heartbeat TTL; sliding window for last-seen",
+              "Shard by userId for scale"
+            ],
+            "failureModes": [
+              "Stale presence after client crash",
+              "Hot keys for popular users"
+            ]
+          }
+        },
+        "justification": {
+          "reasons": [
+            {
+              "type": "FAILURE_MITIGATION",
+              "text": "Stale presence after crash; hot keys for popular users"
+            },
+            {
+              "type": "FR",
+              "text": "Online/offline status, typing indicators"
+            },
+            {
+              "type": "NFR",
+              "text": "Real-time presence at scale"
+            }
+          ],
+          "tradeoffs": "stale presence after crash; hot keys for popular users",
+          "failureModes": "stale presence after crash; hot keys for popular users",
+          "metrics": {}
+        }
+      },
+      {
+        "id": "conversation-service",
+        "type": "conversation-service",
+        "label": "Conversation Service",
+        "category": "compute",
+        "description": "Manages conversation metadata: create/archive threads, list conversations, resolve participants.",
+        "data": {
+          "notes": {
+            "purpose": "Manages conversation metadata: create/archive threads, list conversations, resolve participants.",
+            "keyDecisions": [
+              "Index (userId, lastMessageTs) for list",
+              "Cache hot conversation metadata"
+            ],
+            "failureModes": [
+              "N+1 queries on list",
+              "Hot partitions for active threads"
+            ]
+          }
+        },
+        "details": {
+          "purpose": "Manages conversation metadata: create/archive threads, list conversations, resolve participants.",
+          "defaults": {
+            "pagination": "",
+            "indexStrategy": "",
+            "cacheTTL": ""
+          },
+          "notes": {
+            "purpose": "Manages conversation metadata: create/archive threads, list conversations, resolve participants.",
+            "keyDecisions": [
+              "Index (userId, lastMessageTs) for list",
+              "Cache hot conversation metadata"
+            ],
+            "failureModes": [
+              "N+1 queries on list",
+              "Hot partitions for active threads"
+            ]
+          }
+        },
+        "justification": {
+          "reasons": [
+            {
+              "type": "FR",
+              "text": "Build a 1:1 and group chat like WhatsApp. Messages must be delivered in order, support read receipts, and wor…"
+            },
+            {
+              "type": "FAILURE_MITIGATION",
+              "text": "N+1 on list; hot partitions"
+            }
+          ],
+          "tradeoffs": "N+1 queries on list; hot partitions for popular conversations",
+          "failureModes": "N+1 queries on list; hot partitions for popular conversations",
+          "metrics": {}
+        }
+      },
+      {
+        "id": "message-service",
+        "type": "message-service",
+        "label": "Message Service",
+        "category": "compute",
+        "description": "Handles message send/receive: validate, persist, fanout to realtime and push pipelines.",
+        "data": {
+          "notes": {
+            "purpose": "Handles message send/receive: validate, persist, fanout to realtime and push pipelines.",
+            "keyDecisions": [
+              "Idempotency key per message; partition by conversationId",
+              "Fanout: event-log for realtime, queue for push"
+            ],
+            "failureModes": [
+              "Duplicate messages without idempotency",
+              "Ordering breaks under partition rebalance"
+            ]
+          }
+        },
+        "details": {
+          "purpose": "Handles message send/receive: validate, persist, fanout to realtime and push pipelines.",
+          "defaults": {
+            "idempotencyKey": "",
+            "ordering": "",
+            "retention": ""
+          },
+          "notes": {
+            "purpose": "Handles message send/receive: validate, persist, fanout to realtime and push pipelines.",
+            "keyDecisions": [
+              "Idempotency key per message; partition by conversationId",
+              "Fanout: event-log for realtime, queue for push"
+            ],
+            "failureModes": [
+              "Duplicate messages without idempotency",
+              "Ordering breaks under partition rebalance"
+            ]
+          }
+        },
+        "justification": {
+          "reasons": [
+            {
+              "type": "FAILURE_MITIGATION",
+              "text": "Duplicates without idempotency; ordering breaks"
+            },
+            {
+              "type": "FR",
+              "text": "Send/receive messages, fanout to pipelines"
+            },
+            {
+              "type": "NFR",
+              "text": "Ordering and idempotency"
+            }
+          ],
+          "tradeoffs": "duplicate messages without idempotency; ordering breaks under load",
+          "failureModes": "duplicate messages without idempotency; ordering breaks under load",
+          "metrics": {}
+        }
+      },
+      {
+        "id": "message-store",
+        "type": "message-store",
+        "label": "Message Store (Sharded KV/Wide-Column)",
+        "category": "storage",
+        "description": "Durable storage for chat messages; sharded by conversationId or (conversationId, messageId) for scale.",
+        "data": {
+          "notes": {
+            "purpose": "Durable storage for chat messages; sharded by conversationId or (conversationId, messageId) for scale.",
+            "keyDecisions": [
+              "Partition key: conversationId; sort key: messageId or timestamp",
+              "Wide-column or KV; TTL for retention"
+            ],
+            "failureModes": [
+              "Hot partition for viral threads",
+              "Uneven shard distribution"
+            ]
+          }
+        },
+        "details": {
+          "purpose": "Durable storage for chat messages; sharded by conversationId or (conversationId, messageId) for scale.",
+          "defaults": {
+            "partitionKey": "",
+            "sortKey": "",
+            "ttl": "",
+            "compaction": ""
+          },
+          "notes": {
+            "purpose": "Durable storage for chat messages; sharded by conversationId or (conversationId, messageId) for scale.",
+            "keyDecisions": [
+              "Partition key: conversationId; sort key: messageId or timestamp",
+              "Wide-column or KV; TTL for retention"
+            ],
+            "failureModes": [
+              "Hot partition for viral threads",
+              "Uneven shard distribution"
+            ]
+          }
+        },
+        "justification": {
+          "reasons": [
+            {
+              "type": "FAILURE_MITIGATION",
+              "text": "Hot partition for popular convs; uneven shards"
+            },
+            {
+              "type": "FR",
+              "text": "Durable message storage"
+            },
+            {
+              "type": "NFR",
+              "text": "Sharded write scale"
+            }
+          ],
+          "tradeoffs": "hot partition for popular conversations; uneven shard distribution",
+          "failureModes": "hot partition for popular conversations; uneven shard distribution",
+          "metrics": {}
+        }
+      },
+      {
+        "id": "conversation-metadata-store",
+        "type": "conversation-metadata-store",
+        "label": "Conversation Metadata Store",
+        "category": "storage",
+        "description": "Stores conversation metadata: participants, last message timestamp, read receipts.",
+        "data": {
+          "notes": {
+            "purpose": "Stores conversation metadata: participants, last message timestamp, read receipts.",
+            "keyDecisions": [
+              "Document or SQL; index for list-by-user",
+              "Eventual consistency for read receipts OK"
+            ],
+            "failureModes": [
+              "Hot rows for active conversations",
+              "Read-after-write consistency gaps"
+            ]
+          }
+        },
+        "details": {
+          "purpose": "Stores conversation metadata: participants, last message timestamp, read receipts.",
+          "defaults": {
+            "indexes": "",
+            "partitionKey": "",
+            "cacheLayer": ""
+          },
+          "notes": {
+            "purpose": "Stores conversation metadata: participants, last message timestamp, read receipts.",
+            "keyDecisions": [
+              "Document or SQL; index for list-by-user",
+              "Eventual consistency for read receipts OK"
+            ],
+            "failureModes": [
+              "Hot rows for active conversations",
+              "Read-after-write consistency gaps"
+            ]
+          }
+        },
+        "justification": {
+          "reasons": [
+            {
+              "type": "FR",
+              "text": "Build a 1:1 and group chat like WhatsApp. Messages must be delivered in order, support read receipts, and wor…"
+            },
+            {
+              "type": "FAILURE_MITIGATION",
+              "text": "Hot rows; eventual consistency"
+            }
+          ],
+          "tradeoffs": "hot rows for active conversations; eventual consistency for read receipts",
+          "failureModes": "hot rows for active conversations; eventual consistency for read receipts",
+          "metrics": {}
+        }
+      },
+      {
+        "id": "event-log",
+        "type": "event-log",
+        "label": "Event Log / Stream",
+        "category": "messaging",
+        "description": "Durable ordered log for high-throughput event streaming and replay.",
+        "data": {
+          "notes": {
+            "purpose": "Durable ordered log for high-throughput event streaming and replay.",
+            "keyDecisions": [
+              "Partition by conversationId for ordering",
+              "Retention policy; compaction for deletes"
+            ],
+            "failureModes": [
+              "Hot partition; consumer lag",
+              "Rebalancing storms"
+            ]
+          }
+        },
+        "details": {
+          "purpose": "Durable ordered log for high-throughput event streaming and replay.",
+          "defaults": {
+            "partitions": "",
+            "replication": "",
+            "retention": "",
+            "compaction": ""
+          },
+          "notes": {
+            "purpose": "Durable ordered log for high-throughput event streaming and replay.",
+            "keyDecisions": [
+              "Partition by conversationId for ordering",
+              "Retention policy; compaction for deletes"
+            ],
+            "failureModes": [
+              "Hot partition; consumer lag",
+              "Rebalancing storms"
+            ]
+          }
+        },
+        "justification": {
+          "reasons": [
+            {
+              "type": "FR",
+              "text": "Build a 1:1 and group chat like WhatsApp. Messages must be delivered in order, support read receipts, and wor…"
+            },
+            {
+              "type": "FAILURE_MITIGATION",
+              "text": "Consumer lag; hot partition; rebalancing"
+            }
+          ],
+          "tradeoffs": "hot partition; consumer lag; rebalancing storms",
+          "failureModes": "hot partition; consumer lag; rebalancing storms",
+          "metrics": {}
+        }
+      },
+      {
+        "id": "worker",
+        "type": "worker",
+        "label": "Worker",
+        "category": "compute",
+        "description": "Consumes async jobs/events; performs background processing.",
+        "data": {
+          "notes": {
+            "purpose": "Consumes async jobs/events; performs background processing.",
+            "keyDecisions": [
+              "Idempotent processing; DLQ for poison",
+              "Scale consumers with partition count"
+            ],
+            "failureModes": [
+              "Poison messages block partition",
+              "Retry storms without backoff"
+            ]
+          }
+        },
+        "details": {
+          "purpose": "Consumes async jobs/events; performs background processing.",
+          "defaults": {
+            "concurrency": "",
+            "retries": "",
+            "idempotency": "",
+            "batchSize": ""
+          },
+          "notes": {
+            "purpose": "Consumes async jobs/events; performs background processing.",
+            "keyDecisions": [
+              "Idempotent processing; DLQ for poison",
+              "Scale consumers with partition count"
+            ],
+            "failureModes": [
+              "Poison messages block partition",
+              "Retry storms without backoff"
+            ]
+          }
+        },
+        "justification": {
+          "reasons": [
+            {
+              "type": "FR",
+              "text": "Build a 1:1 and group chat like WhatsApp. Messages must be delivered in order, support read receipts, and wor…"
+            },
+            {
+              "type": "FAILURE_MITIGATION",
+              "text": "At-least-once; idempotency required"
+            }
+          ],
+          "tradeoffs": "poison messages; retry storms; duplicate processing",
+          "failureModes": "poison messages; retry storms; duplicate processing",
+          "metrics": {}
+        }
+      },
+      {
+        "id": "dlq",
+        "type": "dlq",
+        "label": "Dead Letter Queue",
+        "category": "reliability",
+        "description": "Isolates poison messages for inspection and reprocessing without blocking pipelines.",
+        "data": {
+          "notes": {
+            "purpose": "Isolates poison messages for inspection and reprocessing without blocking pipelines.",
+            "keyDecisions": [
+              "Max retries before DLQ; alert on depth",
+              "Manual triage and redrive"
+            ],
+            "failureModes": [
+              "Silent accumulation without monitoring",
+              "Reprocessing without fix"
+            ]
+          }
+        },
+        "details": {
+          "purpose": "Isolates poison messages for inspection and reprocessing without blocking pipelines.",
+          "defaults": {
+            "maxReceiveCount": "",
+            "redrivePolicy": ""
+          },
+          "notes": {
+            "purpose": "Isolates poison messages for inspection and reprocessing without blocking pipelines.",
+            "keyDecisions": [
+              "Max retries before DLQ; alert on depth",
+              "Manual triage and redrive"
+            ],
+            "failureModes": [
+              "Silent accumulation without monitoring",
+              "Reprocessing without fix"
+            ]
+          }
+        },
+        "justification": {
+          "reasons": [
+            {
+              "type": "FAILURE_MITIGATION",
+              "text": "Unblocks pipeline; manual triage required"
+            },
+            {
+              "type": "NFR",
+              "text": "Isolate poison messages"
+            }
+          ],
+          "tradeoffs": "silent accumulation (no monitoring); reprocessing without fix",
+          "failureModes": "silent accumulation (no monitoring); reprocessing without fix",
+          "metrics": {}
+        }
+      },
+      {
+        "id": "notification-service",
+        "type": "notification-service",
+        "label": "Notification Service (Push)",
+        "category": "compute",
+        "description": "Sends push notifications to offline users via APNs/FCM; batches and retries.",
+        "data": {
+          "notes": {
+            "purpose": "Sends push notifications to offline users via APNs/FCM; batches and retries.",
+            "keyDecisions": [
+              "Batch payloads; retry with exponential backoff",
+              "Refresh device tokens periodically"
+            ],
+            "failureModes": [
+              "Token expiry causes silent drops",
+              "Provider rate limits"
+            ]
+          }
+        },
+        "details": {
+          "purpose": "Sends push notifications to offline users via APNs/FCM; batches and retries.",
+          "defaults": {
+            "batchSize": "",
+            "retryPolicy": "",
+            "deviceTokenRefresh": ""
+          },
+          "notes": {
+            "purpose": "Sends push notifications to offline users via APNs/FCM; batches and retries.",
+            "keyDecisions": [
+              "Batch payloads; retry with exponential backoff",
+              "Refresh device tokens periodically"
+            ],
+            "failureModes": [
+              "Token expiry causes silent drops",
+              "Provider rate limits"
+            ]
+          }
+        },
+        "justification": {
+          "reasons": [
+            {
+              "type": "FAILURE_MITIGATION",
+              "text": "Token expiry; provider rate limits"
+            },
+            {
+              "type": "FR",
+              "text": "Push notifications to offline users"
+            },
+            {
+              "type": "NFR",
+              "text": "APNs/FCM delivery"
+            }
+          ],
+          "tradeoffs": "token expiry causing silent failures; provider rate limits",
+          "failureModes": "token expiry causing silent failures; provider rate limits",
+          "metrics": {}
+        }
+      },
+      {
+        "id": "object-storage",
+        "type": "object-storage",
+        "label": "Object Storage",
+        "category": "storage",
+        "description": "Stores large blobs (images/videos/files); durable and cost-effective.",
+        "data": {
+          "notes": {
+            "purpose": "Stores large blobs (images/videos/files); durable and cost-effective.",
+            "keyDecisions": [
+              "Presigned URLs for direct upload",
+              "Lifecycle policies for archival"
+            ],
+            "failureModes": [
+              "Eventual consistency edge cases",
+              "Hot prefix for popular media"
+            ]
+          }
+        },
+        "details": {
+          "purpose": "Stores large blobs (images/videos/files); durable and cost-effective.",
+          "defaults": {
+            "storageClass": "",
+            "lifecyclePolicy": "",
+            "versioning": "",
+            "multipartUpload": ""
+          },
+          "notes": {
+            "purpose": "Stores large blobs (images/videos/files); durable and cost-effective.",
+            "keyDecisions": [
+              "Presigned URLs for direct upload",
+              "Lifecycle policies for archival"
+            ],
+            "failureModes": [
+              "Eventual consistency edge cases",
+              "Hot prefix for popular media"
+            ]
+          }
+        },
+        "justification": {
+          "reasons": [
+            {
+              "type": "FAILURE_MITIGATION",
+              "text": "Eventual consistency; prefix hot spots"
+            },
+            {
+              "type": "FR",
+              "text": "Blob/media/file storage"
+            },
+            {
+              "type": "NFR",
+              "text": "Durability and cost-efficiency"
+            }
+          ],
+          "tradeoffs": "eventual consistency edge cases (some systems); hot prefix",
+          "failureModes": "eventual consistency edge cases (some systems); hot prefix",
+          "metrics": {}
+        }
+      },
+      {
+        "id": "cdn",
+        "type": "cdn",
+        "label": "CDN",
+        "category": "edge",
+        "description": "Caches and serves static and cacheable dynamic content close to users; reduces origin load.",
+        "data": {
+          "notes": {
+            "purpose": "Caches and serves static and cacheable dynamic content close to users; reduces origin load.",
+            "keyDecisions": [
+              "Cache media by content hash or path",
+              "Purge on update; stale-while-revalidate"
+            ],
+            "failureModes": [
+              "Cache poisoning",
+              "Origin overload on miss spike"
+            ]
+          }
+        },
+        "details": {
+          "purpose": "Caches and serves static and cacheable dynamic content close to users; reduces origin load.",
+          "defaults": {
+            "cacheTTL": "",
+            "cacheKey": "",
+            "staleWhileRevalidate": "",
+            "purge": "",
+            "geoRestrictions": ""
+          },
+          "notes": {
+            "purpose": "Caches and serves static and cacheable dynamic content close to users; reduces origin load.",
+            "keyDecisions": [
+              "Cache media by content hash or path",
+              "Purge on update; stale-while-revalidate"
+            ],
+            "failureModes": [
+              "Cache poisoning",
+              "Origin overload on miss spike"
+            ]
+          }
+        },
+        "justification": {
+          "reasons": [
+            {
+              "type": "FR",
+              "text": "Build a 1:1 and group chat like WhatsApp. Messages must be delivered in order, support read receipts, and wor…"
+            },
+            {
+              "type": "FAILURE_MITIGATION",
+              "text": "Cache miss falls back to origin; stale content risk"
+            }
+          ],
+          "tradeoffs": "cache poisoning; stale content; origin overload when cache miss spikes",
+          "failureModes": "cache poisoning; stale content; origin overload when cache miss spikes",
+          "metrics": {}
+        }
+      },
+      {
+        "id": "media-service",
+        "type": "media-service",
+        "label": "Media Service",
+        "category": "compute",
+        "description": "Handles image/video upload, transcoding, thumbnails; stores in object storage, serves via CDN.",
+        "data": {
+          "notes": {
+            "purpose": "Handles image/video upload, transcoding, thumbnails; stores in object storage, serves via CDN.",
+            "keyDecisions": [
+              "Async transcoding; store original + variants",
+              "Thumbnail generation pipeline"
+            ],
+            "failureModes": [
+              "Upload timeout for large files",
+              "Transcoding backlog"
+            ]
+          }
+        },
+        "details": {
+          "purpose": "Handles image/video upload, transcoding, thumbnails; stores in object storage, serves via CDN.",
+          "defaults": {
+            "presignedUpload": "",
+            "transcodingPipeline": "",
+            "thumbnailSize": ""
+          },
+          "notes": {
+            "purpose": "Handles image/video upload, transcoding, thumbnails; stores in object storage, serves via CDN.",
+            "keyDecisions": [
+              "Async transcoding; store original + variants",
+              "Thumbnail generation pipeline"
+            ],
+            "failureModes": [
+              "Upload timeout for large files",
+              "Transcoding backlog"
+            ]
+          }
+        },
+        "justification": {
+          "reasons": [
+            {
+              "type": "FAILURE_MITIGATION",
+              "text": "Upload timeout; transcoding backlog"
+            },
+            {
+              "type": "FR",
+              "text": "Upload, transcoding, thumbnails"
+            },
+            {
+              "type": "NFR",
+              "text": "Presigned uploads; async processing"
+            }
+          ],
+          "tradeoffs": "upload timeout for large files; transcoding backlog",
+          "failureModes": "upload timeout for large files; transcoding backlog",
+          "metrics": {}
+        }
+      },
+      {
+        "id": "metrics",
+        "type": "metrics",
+        "label": "Metrics",
+        "category": "observability",
+        "description": "Collects time-series measurements for monitoring and alerting.",
+        "data": {
+          "notes": {
+            "purpose": "Collects time-series measurements for monitoring and alerting.",
+            "keyDecisions": [
+              "Cardinality guards; sample high-volume metrics",
+              "SLI/SLO dashboards"
+            ],
+            "failureModes": [
+              "High cardinality costs",
+              "Missing metrics"
+            ]
+          }
+        },
+        "details": {
+          "purpose": "Collects time-series measurements for monitoring and alerting.",
+          "defaults": {
+            "cardinalityGuards": "",
+            "scrapeInterval": "",
+            "retention": ""
+          },
+          "notes": {
+            "purpose": "Collects time-series measurements for monitoring and alerting.",
+            "keyDecisions": [
+              "Cardinality guards; sample high-volume metrics",
+              "SLI/SLO dashboards"
+            ],
+            "failureModes": [
+              "High cardinality costs",
+              "Missing metrics"
+            ]
+          }
+        },
+        "justification": {
+          "reasons": [
+            {
+              "type": "FAILURE_MITIGATION",
+              "text": "High cardinality costs; missing metrics"
+            },
+            {
+              "type": "NFR",
+              "text": "Monitoring and alerting"
+            }
+          ],
+          "tradeoffs": "high cardinality costs; missing metrics due to scraping issues",
+          "failureModes": "high cardinality costs; missing metrics due to scraping issues",
+          "metrics": {}
+        }
+      },
+      {
+        "id": "logging",
+        "type": "logging",
+        "label": "Logging",
+        "category": "observability",
+        "description": "Stores logs for debugging/auditing; supports search and retention.",
+        "data": {
+          "notes": {
+            "purpose": "Stores logs for debugging/auditing; supports search and retention.",
+            "keyDecisions": [
+              "Structured JSON; correlation IDs",
+              "Sampling for high-volume paths"
+            ],
+            "failureModes": [
+              "PII leakage",
+              "Cost explosion"
+            ]
+          }
+        },
+        "details": {
+          "purpose": "Stores logs for debugging/auditing; supports search and retention.",
+          "defaults": {
+            "sampling": "",
+            "retention": "",
+            "redaction": ""
+          },
+          "notes": {
+            "purpose": "Stores logs for debugging/auditing; supports search and retention.",
+            "keyDecisions": [
+              "Structured JSON; correlation IDs",
+              "Sampling for high-volume paths"
+            ],
+            "failureModes": [
+              "PII leakage",
+              "Cost explosion"
+            ]
+          }
+        },
+        "justification": {
+          "reasons": [
+            {
+              "type": "FAILURE_MITIGATION",
+              "text": "PII leakage; cost explosion"
+            },
+            {
+              "type": "NFR",
+              "text": "Debugging and audit trail"
+            }
+          ],
+          "tradeoffs": "PII leakage; cost explosion; missing correlation IDs",
+          "failureModes": "PII leakage; cost explosion; missing correlation IDs",
+          "metrics": {}
+        }
+      },
+      {
+        "id": "tracing",
+        "type": "tracing",
+        "label": "Tracing",
+        "category": "observability",
+        "description": "Distributed tracing to understand request paths and latency contributors.",
+        "data": {
+          "notes": {
+            "purpose": "Distributed tracing to understand request paths and latency contributors.",
+            "keyDecisions": [
+              "Sample 1–10% of requests",
+              "Propagate trace context across services"
+            ],
+            "failureModes": [
+              "Missing propagation",
+              "Sampling hides tail latencies"
+            ]
+          }
+        },
+        "details": {
+          "purpose": "Distributed tracing to understand request paths and latency contributors.",
+          "defaults": {
+            "sampling": "",
+            "propagation": "",
+            "retention": ""
+          },
+          "notes": {
+            "purpose": "Distributed tracing to understand request paths and latency contributors.",
+            "keyDecisions": [
+              "Sample 1–10% of requests",
+              "Propagate trace context across services"
+            ],
+            "failureModes": [
+              "Missing propagation",
+              "Sampling hides tail latencies"
+            ]
+          }
+        },
+        "justification": {
+          "reasons": [
+            {
+              "type": "FAILURE_MITIGATION",
+              "text": "Sampling hides tail latencies"
+            },
+            {
+              "type": "NFR",
+              "text": "Distributed trace for latency debugging"
+            }
+          ],
+          "tradeoffs": "missing propagation; sampling hides tail latencies",
+          "failureModes": "missing propagation; sampling hides tail latencies",
+          "metrics": {}
+        }
+      }
+    ],
+    "edges": [
+      {
+        "source": "web-app",
+        "target": "api-gateway"
+      },
+      {
+        "source": "api-gateway",
+        "target": "edge-rate-limiter"
+      },
+      {
+        "source": "edge-rate-limiter",
+        "target": "load-balancer-l7"
+      },
+      {
+        "source": "api-gateway",
+        "target": "auth-service"
+      },
+      {
+        "source": "load-balancer-l7",
+        "target": "message-service"
+      },
+      {
+        "source": "load-balancer-l7",
+        "target": "conversation-service"
+      },
+      {
+        "source": "load-balancer-l7",
+        "target": "realtime-gateway"
+      },
+      {
+        "source": "message-service",
+        "target": "message-store"
+      },
+      {
+        "source": "message-service",
+        "target": "conversation-metadata-store"
+      },
+      {
+        "source": "message-service",
+        "target": "event-log"
+      },
+      {
+        "source": "event-log",
+        "target": "worker"
+      },
+      {
+        "source": "worker",
+        "target": "realtime-gateway"
+      },
+      {
+        "source": "worker",
+        "target": "notification-service"
+      },
+      {
+        "source": "worker",
+        "target": "dlq"
+      },
+      {
+        "source": "realtime-gateway",
+        "target": "presence-service"
+      },
+      {
+        "source": "message-service",
+        "target": "media-service"
+      },
+      {
+        "source": "media-service",
+        "target": "object-storage"
+      },
+      {
+        "source": "media-service",
+        "target": "cdn"
+      },
+      {
+        "source": "message-service",
+        "target": "metrics"
+      },
+      {
+        "source": "conversation-service",
+        "target": "metrics"
+      },
+      {
+        "source": "worker",
+        "target": "metrics"
+      },
+      {
+        "source": "realtime-gateway",
+        "target": "metrics"
+      },
+      {
+        "source": "notification-service",
+        "target": "metrics"
+      },
+      {
+        "source": "message-service",
+        "target": "logging"
+      },
+      {
+        "source": "message-service",
+        "target": "tracing"
+      }
+    ],
+    "notesByNodeId": {
+      "web-app": {
+        "purpose": "Client-facing UI; calls APIs; manages user interactions.",
+        "knobs": {
+          "cache": "",
+          "prefetch": "",
+          "offlineMode": ""
+        },
+        "tradeoffs": [],
+        "failureModes": [],
+        "interviewHooks": []
+      },
+      "load-balancer-l7": {
+        "purpose": "Distributes HTTP traffic across healthy instances; supports routing rules.",
+        "knobs": {
+          "algorithm": "",
+          "healthChecks": "",
+          "timeouts": "",
+          "connectionDraining": ""
+        },
+        "tradeoffs": [],
+        "failureModes": [],
+        "interviewHooks": []
+      },
+      "api-gateway": {
+        "purpose": "Single entry point for APIs; handles routing, auth, quotas, request shaping.",
+        "knobs": {
+          "routes": "",
+          "auth": "",
+          "quotas": "",
+          "timeouts": "",
+          "payloadLimits": ""
+        },
+        "tradeoffs": "single point of failure; misconfigured routing; latency overhead",
+        "failureModes": "single point of failure; misconfigured routing; latency overhead",
+        "interviewHooks": []
+      },
+      "edge-rate-limiter": {
+        "purpose": "Protects systems from overload and abuse; enforces per-user/IP/API limits.",
+        "knobs": {
+          "limitKey": "",
+          "limits": "",
+          "burst": "",
+          "window": "",
+          "tokenBucket": "",
+          "leakyBucket": ""
+        },
+        "tradeoffs": "hot keys on limiter storage; incorrect keying causing unfair limits",
+        "failureModes": "hot keys on limiter storage; incorrect keying causing unfair limits",
+        "interviewHooks": []
+      },
+      "auth-service": {
+        "purpose": "Issues/validates credentials (sessions, tokens); enforces authentication flows.",
+        "knobs": {
+          "tokenTTL": "",
+          "refreshTTL": "",
+          "rotation": "",
+          "mfa": ""
+        },
+        "tradeoffs": "token replay if not bound; clock skew issues; session store overload",
+        "failureModes": "token replay if not bound; clock skew issues; session store overload",
+        "interviewHooks": []
+      },
+      "realtime-gateway": {
+        "purpose": "Maintains WebSocket connections for real-time bidirectional messaging; routes messages to connected clients.",
+        "knobs": {
+          "connectionTimeout": "",
+          "heartbeatInterval": "",
+          "maxConnectionsPerInstance": "",
+          "stickySessions": ""
+        },
+        "tradeoffs": "connection storms on reconnect; stale connections after instance failover",
+        "failureModes": "connection storms on reconnect; stale connections after instance failover",
+        "interviewHooks": []
+      },
+      "presence-service": {
+        "purpose": "Tracks online/offline status of users; supports last-seen, typing indicators, and room membership.",
+        "knobs": {
+          "heartbeatTTL": "",
+          "slidingWindow": "",
+          "shardingKey": ""
+        },
+        "tradeoffs": "stale presence after crash; hot keys for popular users",
+        "failureModes": "stale presence after crash; hot keys for popular users",
+        "interviewHooks": []
+      },
+      "conversation-service": {
+        "purpose": "Manages conversation metadata: create/archive threads, list conversations, resolve participants.",
+        "knobs": {
+          "pagination": "",
+          "indexStrategy": "",
+          "cacheTTL": ""
+        },
+        "tradeoffs": "N+1 queries on list; hot partitions for popular conversations",
+        "failureModes": "N+1 queries on list; hot partitions for popular conversations",
+        "interviewHooks": []
+      },
+      "message-service": {
+        "purpose": "Handles message send/receive: validate, persist, fanout to realtime and push pipelines.",
+        "knobs": {
+          "idempotencyKey": "",
+          "ordering": "",
+          "retention": ""
+        },
+        "tradeoffs": "duplicate messages without idempotency; ordering breaks under load",
+        "failureModes": "duplicate messages without idempotency; ordering breaks under load",
+        "interviewHooks": []
+      },
+      "message-store": {
+        "purpose": "Durable storage for chat messages; sharded by conversationId or (conversationId, messageId) for scale.",
+        "knobs": {
+          "partitionKey": "",
+          "sortKey": "",
+          "ttl": "",
+          "compaction": ""
+        },
+        "tradeoffs": "hot partition for popular conversations; uneven shard distribution",
+        "failureModes": "hot partition for popular conversations; uneven shard distribution",
+        "interviewHooks": []
+      },
+      "conversation-metadata-store": {
+        "purpose": "Stores conversation metadata: participants, last message timestamp, read receipts.",
+        "knobs": {
+          "indexes": "",
+          "partitionKey": "",
+          "cacheLayer": ""
+        },
+        "tradeoffs": "hot rows for active conversations; eventual consistency for read receipts",
+        "failureModes": "hot rows for active conversations; eventual consistency for read receipts",
+        "interviewHooks": []
+      },
+      "event-log": {
+        "purpose": "Durable ordered log for high-throughput event streaming and replay.",
+        "knobs": {
+          "partitions": "",
+          "replication": "",
+          "retention": "",
+          "compaction": ""
+        },
+        "tradeoffs": "hot partition; consumer lag; rebalancing storms",
+        "failureModes": "hot partition; consumer lag; rebalancing storms",
+        "interviewHooks": []
+      },
+      "worker": {
+        "purpose": "Consumes async jobs/events; performs background processing.",
+        "knobs": {
+          "concurrency": "",
+          "retries": "",
+          "idempotency": "",
+          "batchSize": ""
+        },
+        "tradeoffs": "poison messages; retry storms; duplicate processing",
+        "failureModes": "poison messages; retry storms; duplicate processing",
+        "interviewHooks": []
+      },
+      "dlq": {
+        "purpose": "Isolates poison messages for inspection and reprocessing without blocking pipelines.",
+        "knobs": {
+          "maxReceiveCount": "",
+          "redrivePolicy": ""
+        },
+        "tradeoffs": "silent accumulation (no monitoring); reprocessing without fix",
+        "failureModes": "silent accumulation (no monitoring); reprocessing without fix",
+        "interviewHooks": []
+      },
+      "notification-service": {
+        "purpose": "Sends push notifications to offline users via APNs/FCM; batches and retries.",
+        "knobs": {
+          "batchSize": "",
+          "retryPolicy": "",
+          "deviceTokenRefresh": ""
+        },
+        "tradeoffs": "token expiry causing silent failures; provider rate limits",
+        "failureModes": "token expiry causing silent failures; provider rate limits",
+        "interviewHooks": []
+      },
+      "object-storage": {
+        "purpose": "Stores large blobs (images/videos/files); durable and cost-effective.",
+        "knobs": {
+          "storageClass": "",
+          "lifecyclePolicy": "",
+          "versioning": "",
+          "multipartUpload": ""
+        },
+        "tradeoffs": "eventual consistency edge cases (some systems); hot prefix",
+        "failureModes": "eventual consistency edge cases (some systems); hot prefix",
+        "interviewHooks": []
+      },
+      "cdn": {
+        "purpose": "Caches and serves static and cacheable dynamic content close to users; reduces origin load.",
+        "knobs": {
+          "cacheTTL": "",
+          "cacheKey": "",
+          "staleWhileRevalidate": "",
+          "purge": "",
+          "geoRestrictions": ""
+        },
+        "tradeoffs": "cache poisoning; stale content; origin overload when cache miss spikes",
+        "failureModes": "cache poisoning; stale content; origin overload when cache miss spikes",
+        "interviewHooks": []
+      },
+      "media-service": {
+        "purpose": "Handles image/video upload, transcoding, thumbnails; stores in object storage, serves via CDN.",
+        "knobs": {
+          "presignedUpload": "",
+          "transcodingPipeline": "",
+          "thumbnailSize": ""
+        },
+        "tradeoffs": "upload timeout for large files; transcoding backlog",
+        "failureModes": "upload timeout for large files; transcoding backlog",
+        "interviewHooks": []
+      },
+      "metrics": {
+        "purpose": "Collects time-series measurements for monitoring and alerting.",
+        "knobs": {
+          "cardinalityGuards": "",
+          "scrapeInterval": "",
+          "retention": ""
+        },
+        "tradeoffs": "high cardinality costs; missing metrics due to scraping issues",
+        "failureModes": "high cardinality costs; missing metrics due to scraping issues",
+        "interviewHooks": []
+      },
+      "logging": {
+        "purpose": "Stores logs for debugging/auditing; supports search and retention.",
+        "knobs": {
+          "sampling": "",
+          "retention": "",
+          "redaction": ""
+        },
+        "tradeoffs": "PII leakage; cost explosion; missing correlation IDs",
+        "failureModes": "PII leakage; cost explosion; missing correlation IDs",
+        "interviewHooks": []
+      },
+      "tracing": {
+        "purpose": "Distributed tracing to understand request paths and latency contributors.",
+        "knobs": {
+          "sampling": "",
+          "propagation": "",
+          "retention": ""
+        },
+        "tradeoffs": "missing propagation; sampling hides tail latencies",
+        "failureModes": "missing propagation; sampling hides tail latencies",
+        "interviewHooks": []
+      }
+    }
+  },
+  "scoringRubric": [
+    "WebSocket vs long-poll tradeoffs",
+    "Message ordering guarantees",
+    "Offline sync strategy"
+  ],
+  "antiPatterns": [
+    "Polling for new messages",
+    "No message queue for delivery"
+  ],
+  "validation": {
+    "coverage": [
+      {
+        "nodeId": "web-app",
+        "justifications": [
+          {
+            "type": "functional",
+            "index": 0,
+            "text": "Build a 1:1 and group chat like WhatsApp. Messages must be delivered in order, support read receipts, and wor…"
+          },
+          {
+            "type": "functional",
+            "index": 1,
+            "text": "Send/receive 1:1 messages"
+          },
+          {
+            "type": "functional",
+            "index": 2,
+            "text": "Build a 1:1 and group chat like WhatsApp. Messages must be delivered in order, support read receipts, and wor…"
+          },
+          {
+            "type": "functional",
+            "index": 3,
+            "text": "Send/receive 1:1 messages"
+          },
+          {
+            "type": "functional",
+            "index": 5,
+            "text": "Build a 1:1 and group chat like WhatsApp. Messages must be delivered in order, support read receipts, and wor…"
+          },
+          {
+            "type": "functional",
+            "index": 6,
+            "text": "Send/receive 1:1 messages"
+          }
+        ]
+      },
+      {
+        "nodeId": "load-balancer-l7",
+        "justifications": [
+          {
+            "type": "implicit",
+            "text": "Core infrastructure"
+          }
+        ]
+      },
+      {
+        "nodeId": "api-gateway",
+        "justifications": [
+          {
+            "type": "implicit",
+            "text": "Core infrastructure"
+          }
+        ]
+      },
+      {
+        "nodeId": "edge-rate-limiter",
+        "justifications": [
+          {
+            "type": "implicit",
+            "text": "Core infrastructure"
+          }
+        ]
+      },
+      {
+        "nodeId": "auth-service",
+        "justifications": [
+          {
+            "type": "implicit",
+            "text": "Core infrastructure"
+          }
+        ]
+      },
+      {
+        "nodeId": "realtime-gateway",
+        "justifications": [
+          {
+            "type": "functional",
+            "index": 0,
+            "text": "Build a 1:1 and group chat like WhatsApp. Messages must be delivered in order, support read receipts, and wor…"
+          },
+          {
+            "type": "functional",
+            "index": 1,
+            "text": "Send/receive 1:1 messages"
+          },
+          {
+            "type": "functional",
+            "index": 2,
+            "text": "Build a 1:1 and group chat like WhatsApp. Messages must be delivered in order, support read receipts, and wor…"
+          },
+          {
+            "type": "functional",
+            "index": 3,
+            "text": "Send/receive 1:1 messages"
+          },
+          {
+            "type": "functional",
+            "index": 5,
+            "text": "Build a 1:1 and group chat like WhatsApp. Messages must be delivered in order, support read receipts, and wor…"
+          },
+          {
+            "type": "functional",
+            "index": 6,
+            "text": "Send/receive 1:1 messages"
+          }
+        ]
+      },
+      {
+        "nodeId": "presence-service",
+        "justifications": [
+          {
+            "type": "implicit",
+            "text": "Core infrastructure"
+          }
+        ]
+      },
+      {
+        "nodeId": "conversation-service",
+        "justifications": [
+          {
+            "type": "functional",
+            "index": 8,
+            "text": "Message ordering per conversation"
+          }
+        ]
+      },
+      {
+        "nodeId": "message-service",
+        "justifications": [
+          {
+            "type": "functional",
+            "index": 0,
+            "text": "Build a 1:1 and group chat like WhatsApp. Messages must be delivered in order, support read receipts, and wor…"
+          },
+          {
+            "type": "functional",
+            "index": 1,
+            "text": "Send/receive 1:1 messages"
+          },
+          {
+            "type": "functional",
+            "index": 2,
+            "text": "Build a 1:1 and group chat like WhatsApp. Messages must be delivered in order, support read receipts, and wor…"
+          },
+          {
+            "type": "functional",
+            "index": 3,
+            "text": "Send/receive 1:1 messages"
+          },
+          {
+            "type": "functional",
+            "index": 5,
+            "text": "Build a 1:1 and group chat like WhatsApp. Messages must be delivered in order, support read receipts, and wor…"
+          },
+          {
+            "type": "functional",
+            "index": 6,
+            "text": "Send/receive 1:1 messages"
+          },
+          {
+            "type": "functional",
+            "index": 8,
+            "text": "Message ordering per conversation"
+          },
+          {
+            "type": "functional",
+            "index": 9,
+            "text": "Offline message sync"
+          }
+        ]
+      },
+      {
+        "nodeId": "message-store",
+        "justifications": [
+          {
+            "type": "functional",
+            "index": 0,
+            "text": "Build a 1:1 and group chat like WhatsApp. Messages must be delivered in order, support read receipts, and wor…"
+          },
+          {
+            "type": "functional",
+            "index": 1,
+            "text": "Send/receive 1:1 messages"
+          },
+          {
+            "type": "functional",
+            "index": 2,
+            "text": "Build a 1:1 and group chat like WhatsApp. Messages must be delivered in order, support read receipts, and wor…"
+          },
+          {
+            "type": "functional",
+            "index": 3,
+            "text": "Send/receive 1:1 messages"
+          },
+          {
+            "type": "functional",
+            "index": 4,
+            "text": "Group chats (create, add, leave)"
+          },
+          {
+            "type": "functional",
+            "index": 5,
+            "text": "Build a 1:1 and group chat like WhatsApp. Messages must be delivered in order, support read receipts, and wor…"
+          },
+          {
+            "type": "functional",
+            "index": 6,
+            "text": "Send/receive 1:1 messages"
+          },
+          {
+            "type": "functional",
+            "index": 7,
+            "text": "Group chats (create, add, leave)"
+          },
+          {
+            "type": "functional",
+            "index": 8,
+            "text": "Message ordering per conversation"
+          },
+          {
+            "type": "functional",
+            "index": 9,
+            "text": "Offline message sync"
+          }
+        ]
+      },
+      {
+        "nodeId": "conversation-metadata-store",
+        "justifications": [
+          {
+            "type": "functional",
+            "index": 0,
+            "text": "Build a 1:1 and group chat like WhatsApp. Messages must be delivered in order, support read receipts, and wor…"
+          },
+          {
+            "type": "functional",
+            "index": 1,
+            "text": "Send/receive 1:1 messages"
+          },
+          {
+            "type": "functional",
+            "index": 2,
+            "text": "Build a 1:1 and group chat like WhatsApp. Messages must be delivered in order, support read receipts, and wor…"
+          },
+          {
+            "type": "functional",
+            "index": 3,
+            "text": "Send/receive 1:1 messages"
+          },
+          {
+            "type": "functional",
+            "index": 5,
+            "text": "Build a 1:1 and group chat like WhatsApp. Messages must be delivered in order, support read receipts, and wor…"
+          },
+          {
+            "type": "functional",
+            "index": 6,
+            "text": "Send/receive 1:1 messages"
+          },
+          {
+            "type": "functional",
+            "index": 8,
+            "text": "Message ordering per conversation"
+          },
+          {
+            "type": "functional",
+            "index": 9,
+            "text": "Offline message sync"
+          }
+        ]
+      },
+      {
+        "nodeId": "event-log",
+        "justifications": [
+          {
+            "type": "functional",
+            "index": 1,
+            "text": "Send/receive 1:1 messages"
+          },
+          {
+            "type": "functional",
+            "index": 3,
+            "text": "Send/receive 1:1 messages"
+          },
+          {
+            "type": "functional",
+            "index": 6,
+            "text": "Send/receive 1:1 messages"
+          }
+        ]
+      },
+      {
+        "nodeId": "worker",
+        "justifications": [
+          {
+            "type": "implicit",
+            "text": "Core infrastructure"
+          }
+        ]
+      },
+      {
+        "nodeId": "dlq",
+        "justifications": [
+          {
+            "type": "functional",
+            "index": 0,
+            "text": "Build a 1:1 and group chat like WhatsApp. Messages must be delivered in order, support read receipts, and wor…"
+          },
+          {
+            "type": "functional",
+            "index": 1,
+            "text": "Send/receive 1:1 messages"
+          },
+          {
+            "type": "functional",
+            "index": 2,
+            "text": "Build a 1:1 and group chat like WhatsApp. Messages must be delivered in order, support read receipts, and wor…"
+          },
+          {
+            "type": "functional",
+            "index": 3,
+            "text": "Send/receive 1:1 messages"
+          },
+          {
+            "type": "functional",
+            "index": 5,
+            "text": "Build a 1:1 and group chat like WhatsApp. Messages must be delivered in order, support read receipts, and wor…"
+          },
+          {
+            "type": "functional",
+            "index": 6,
+            "text": "Send/receive 1:1 messages"
+          }
+        ]
+      },
+      {
+        "nodeId": "notification-service",
+        "justifications": [
+          {
+            "type": "functional",
+            "index": 9,
+            "text": "Offline message sync"
+          }
+        ]
+      },
+      {
+        "nodeId": "object-storage",
+        "justifications": [
+          {
+            "type": "implicit",
+            "text": "Core infrastructure"
+          }
+        ]
+      },
+      {
+        "nodeId": "cdn",
+        "justifications": [
+          {
+            "type": "implicit",
+            "text": "Core infrastructure"
+          }
+        ]
+      },
+      {
+        "nodeId": "media-service",
+        "justifications": [
+          {
+            "type": "implicit",
+            "text": "Core infrastructure"
+          }
+        ]
+      },
+      {
+        "nodeId": "metrics",
+        "justifications": [
+          {
+            "type": "implicit",
+            "text": "Core infrastructure"
+          }
+        ]
+      },
+      {
+        "nodeId": "logging",
+        "justifications": [
+          {
+            "type": "implicit",
+            "text": "Core infrastructure"
+          }
+        ]
+      },
+      {
+        "nodeId": "tracing",
+        "justifications": [
+          {
+            "type": "implicit",
+            "text": "Core infrastructure"
+          }
+        ]
+      }
+    ],
+    "nodeValidation": [
+      {
+        "nodeId": "web-app",
+        "status": "core",
+        "justifications": [
+          "Build a 1:1 and group chat like WhatsApp. Messages must be delivered in order, support read receipts, and wor…",
+          "Send/receive 1:1 messages",
+          "Build a 1:1 and group chat like WhatsApp. Messages must be delivered in order, support read receipts, and wor…",
+          "Send/receive 1:1 messages",
+          "Build a 1:1 and group chat like WhatsApp. Messages must be delivered in order, support read receipts, and wor…",
+          "Send/receive 1:1 messages"
+        ],
+        "reason": null,
+        "suggestion": null
+      },
+      {
+        "nodeId": "load-balancer-l7",
+        "status": "core",
+        "justifications": [
+          "Core infrastructure"
+        ],
+        "reason": null,
+        "suggestion": null
+      },
+      {
+        "nodeId": "api-gateway",
+        "status": "optional",
+        "justifications": [
+          "Core infrastructure"
+        ],
+        "reason": null,
+        "suggestion": null
+      },
+      {
+        "nodeId": "edge-rate-limiter",
+        "status": "optional",
+        "justifications": [
+          "Core infrastructure"
+        ],
+        "reason": null,
+        "suggestion": null
+      },
+      {
+        "nodeId": "auth-service",
+        "status": "optional",
+        "justifications": [
+          "Core infrastructure"
+        ],
+        "reason": null,
+        "suggestion": null
+      },
+      {
+        "nodeId": "realtime-gateway",
+        "status": "optional",
+        "justifications": [
+          "Build a 1:1 and group chat like WhatsApp. Messages must be delivered in order, support read receipts, and wor…",
+          "Send/receive 1:1 messages",
+          "Build a 1:1 and group chat like WhatsApp. Messages must be delivered in order, support read receipts, and wor…",
+          "Send/receive 1:1 messages",
+          "Build a 1:1 and group chat like WhatsApp. Messages must be delivered in order, support read receipts, and wor…",
+          "Send/receive 1:1 messages"
+        ],
+        "reason": null,
+        "suggestion": null
+      },
+      {
+        "nodeId": "presence-service",
+        "status": "optional",
+        "justifications": [
+          "Core infrastructure"
+        ],
+        "reason": null,
+        "suggestion": null
+      },
+      {
+        "nodeId": "conversation-service",
+        "status": "optional",
+        "justifications": [
+          "Message ordering per conversation"
+        ],
+        "reason": null,
+        "suggestion": null
+      },
+      {
+        "nodeId": "message-service",
+        "status": "optional",
+        "justifications": [
+          "Build a 1:1 and group chat like WhatsApp. Messages must be delivered in order, support read receipts, and wor…",
+          "Send/receive 1:1 messages",
+          "Build a 1:1 and group chat like WhatsApp. Messages must be delivered in order, support read receipts, and wor…",
+          "Send/receive 1:1 messages",
+          "Build a 1:1 and group chat like WhatsApp. Messages must be delivered in order, support read receipts, and wor…",
+          "Send/receive 1:1 messages",
+          "Message ordering per conversation",
+          "Offline message sync"
+        ],
+        "reason": null,
+        "suggestion": null
+      },
+      {
+        "nodeId": "message-store",
+        "status": "optional",
+        "justifications": [
+          "Build a 1:1 and group chat like WhatsApp. Messages must be delivered in order, support read receipts, and wor…",
+          "Send/receive 1:1 messages",
+          "Build a 1:1 and group chat like WhatsApp. Messages must be delivered in order, support read receipts, and wor…",
+          "Send/receive 1:1 messages",
+          "Group chats (create, add, leave)",
+          "Build a 1:1 and group chat like WhatsApp. Messages must be delivered in order, support read receipts, and wor…",
+          "Send/receive 1:1 messages",
+          "Group chats (create, add, leave)",
+          "Message ordering per conversation",
+          "Offline message sync"
+        ],
+        "reason": null,
+        "suggestion": null
+      },
+      {
+        "nodeId": "conversation-metadata-store",
+        "status": "optional",
+        "justifications": [
+          "Build a 1:1 and group chat like WhatsApp. Messages must be delivered in order, support read receipts, and wor…",
+          "Send/receive 1:1 messages",
+          "Build a 1:1 and group chat like WhatsApp. Messages must be delivered in order, support read receipts, and wor…",
+          "Send/receive 1:1 messages",
+          "Build a 1:1 and group chat like WhatsApp. Messages must be delivered in order, support read receipts, and wor…",
+          "Send/receive 1:1 messages",
+          "Message ordering per conversation",
+          "Offline message sync"
+        ],
+        "reason": null,
+        "suggestion": null
+      },
+      {
+        "nodeId": "event-log",
+        "status": "optional",
+        "justifications": [
+          "Send/receive 1:1 messages",
+          "Send/receive 1:1 messages",
+          "Send/receive 1:1 messages"
+        ],
+        "reason": null,
+        "suggestion": null
+      },
+      {
+        "nodeId": "worker",
+        "status": "optional",
+        "justifications": [
+          "Core infrastructure"
+        ],
+        "reason": null,
+        "suggestion": null
+      },
+      {
+        "nodeId": "dlq",
+        "status": "optional",
+        "justifications": [
+          "Build a 1:1 and group chat like WhatsApp. Messages must be delivered in order, support read receipts, and wor…",
+          "Send/receive 1:1 messages",
+          "Build a 1:1 and group chat like WhatsApp. Messages must be delivered in order, support read receipts, and wor…",
+          "Send/receive 1:1 messages",
+          "Build a 1:1 and group chat like WhatsApp. Messages must be delivered in order, support read receipts, and wor…",
+          "Send/receive 1:1 messages"
+        ],
+        "reason": null,
+        "suggestion": null
+      },
+      {
+        "nodeId": "notification-service",
+        "status": "optional",
+        "justifications": [
+          "Offline message sync"
+        ],
+        "reason": null,
+        "suggestion": null
+      },
+      {
+        "nodeId": "object-storage",
+        "status": "optional",
+        "justifications": [
+          "Core infrastructure"
+        ],
+        "reason": null,
+        "suggestion": null
+      },
+      {
+        "nodeId": "cdn",
+        "status": "optional",
+        "justifications": [
+          "Core infrastructure"
+        ],
+        "reason": null,
+        "suggestion": null
+      },
+      {
+        "nodeId": "media-service",
+        "status": "optional",
+        "justifications": [
+          "Core infrastructure"
+        ],
+        "reason": null,
+        "suggestion": null
+      },
+      {
+        "nodeId": "metrics",
+        "status": "optional",
+        "justifications": [
+          "Core infrastructure"
+        ],
+        "reason": null,
+        "suggestion": null
+      },
+      {
+        "nodeId": "logging",
+        "status": "optional",
+        "justifications": [
+          "Core infrastructure"
+        ],
+        "reason": null,
+        "suggestion": null
+      },
+      {
+        "nodeId": "tracing",
+        "status": "optional",
+        "justifications": [
+          "Core infrastructure"
+        ],
+        "reason": null,
+        "suggestion": null
+      }
+    ],
+    "duplicates": [],
+    "summary": {
+      "totalNodes": 21,
+      "core": 2,
+      "optional": 19,
+      "unjustified": 0,
+      "duplicates": 0
+    },
+    "qualityReport": {
+      "missingCritical": [],
+      "unnecessary": [],
+      "risks": []
+    },
+    "valid": true
+  },
+  "qualityReport": {
+    "missingCritical": [],
+    "unnecessary": [],
+    "risks": []
+  },
+  "starterHints": [],
+  "baselineDesign": {
+    "nodes": [
+      {
+        "id": "web-app",
+        "position": {
+          "x": 250,
+          "y": 0
+        },
+        "data": {
+          "label": "Web App / UI",
+          "purpose": "Client-facing UI; calls APIs; manages user interactions.",
+          "defaults": {
+            "cache": "",
+            "prefetch": "",
+            "offlineMode": ""
+          },
+          "notes": {
+            "purpose": "Client-facing UI; calls APIs; manages user interactions.",
+            "keyDecisions": [
+              "Configure cache",
+              "Follow best practices for scale"
+            ],
+            "failureModes": [
+              "stale UI state",
+              "over-fetching"
+            ]
+          }
+        }
+      },
+      {
+        "id": "load-balancer-l7",
+        "position": {
+          "x": 250,
+          "y": 80
+        },
+        "data": {
+          "label": "Load Balancer (L7)",
+          "purpose": "Distributes HTTP traffic across healthy instances; supports routing rules.",
+          "defaults": {
+            "algorithm": "",
+            "healthChecks": "",
+            "timeouts": "",
+            "connectionDraining": ""
+          },
+          "notes": {
+            "purpose": "Distributes HTTP traffic across healthy instances; supports routing rules.",
+            "keyDecisions": [
+              "Configure algorithm",
+              "Follow best practices for scale"
+            ],
+            "failureModes": [
+              "bad health checks flapping",
+              "uneven load distribution"
+            ]
+          }
+        }
+      },
+      {
+        "id": "api-gateway",
+        "position": {
+          "x": 250,
+          "y": 160
+        },
+        "data": {
+          "label": "API Gateway",
+          "purpose": "Single entry point for APIs; handles routing, auth, quotas, request shaping.",
+          "defaults": {
+            "routes": "",
+            "auth": "",
+            "quotas": "",
+            "timeouts": "",
+            "payloadLimits": ""
+          },
+          "notes": {
+            "purpose": "Single entry point for APIs; handles routing, auth, quotas, request shaping.",
+            "keyDecisions": [
+              "Route by path/version; validate auth before backend",
+              "Centralize rate limits and request shaping"
+            ],
+            "failureModes": [
+              "SPOF; deploy HA with health checks",
+              "Misconfigured routes cause 404/5xx"
+            ]
+          }
+        }
+      },
+      {
+        "id": "edge-rate-limiter",
+        "position": {
+          "x": 250,
+          "y": 240
+        },
+        "data": {
+          "label": "Rate Limiter",
+          "purpose": "Protects systems from overload and abuse; enforces per-user/IP/API limits.",
+          "defaults": {
+            "limitKey": "",
+            "limits": "",
+            "burst": "",
+            "window": "",
+            "tokenBucket": "",
+            "leakyBucket": ""
+          },
+          "notes": {
+            "purpose": "Protects systems from overload and abuse; enforces per-user/IP/API limits.",
+            "keyDecisions": [
+              "Token bucket or sliding window per user/IP",
+              "Distributed state (Redis) for global limits"
+            ],
+            "failureModes": [
+              "Hot keys on limiter storage",
+              "Incorrect keying causes unfair limits"
+            ]
+          }
+        }
+      },
+      {
+        "id": "auth-service",
+        "position": {
+          "x": 250,
+          "y": 320
+        },
+        "data": {
+          "label": "Auth Service",
+          "purpose": "Issues/validates credentials (sessions, tokens); enforces authentication flows.",
+          "defaults": {
+            "tokenTTL": "",
+            "refreshTTL": "",
+            "rotation": "",
+            "mfa": ""
+          },
+          "notes": {
+            "purpose": "Issues/validates credentials (sessions, tokens); enforces authentication flows.",
+            "keyDecisions": [
+              "JWT vs session; token refresh flow",
+              "Validate on gateway or service mesh"
+            ],
+            "failureModes": [
+              "Token replay if not bound to request",
+              "Session store overload"
+            ]
+          }
+        }
+      },
+      {
+        "id": "realtime-gateway",
+        "position": {
+          "x": 250,
+          "y": 400
+        },
+        "data": {
+          "label": "Realtime Gateway (WebSocket)",
+          "purpose": "Maintains WebSocket connections for real-time bidirectional messaging; routes messages to connected clients.",
+          "defaults": {
+            "connectionTimeout": "",
+            "heartbeatInterval": "",
+            "maxConnectionsPerInstance": "",
+            "stickySessions": ""
+          },
+          "notes": {
+            "purpose": "Maintains WebSocket connections for real-time bidirectional messaging; routes messages to connected clients.",
+            "keyDecisions": [
+              "Sticky sessions for WebSocket affinity",
+              "Heartbeat/keepalive to detect dead connections"
+            ],
+            "failureModes": [
+              "Connection storms on mass reconnect",
+              "Stale connections after instance failover"
+            ]
+          }
+        }
+      },
+      {
+        "id": "presence-service",
+        "position": {
+          "x": 250,
+          "y": 480
+        },
+        "data": {
+          "label": "Presence Service",
+          "purpose": "Tracks online/offline status of users; supports last-seen, typing indicators, and room membership.",
+          "defaults": {
+            "heartbeatTTL": "",
+            "slidingWindow": "",
+            "shardingKey": ""
+          },
+          "notes": {
+            "purpose": "Tracks online/offline status of users; supports last-seen, typing indicators, and room membership.",
+            "keyDecisions": [
+              "Heartbeat TTL; sliding window for last-seen",
+              "Shard by userId for scale"
+            ],
+            "failureModes": [
+              "Stale presence after client crash",
+              "Hot keys for popular users"
+            ]
+          }
+        }
+      },
+      {
+        "id": "conversation-service",
+        "position": {
+          "x": 250,
+          "y": 560
+        },
+        "data": {
+          "label": "Conversation Service",
+          "purpose": "Manages conversation metadata: create/archive threads, list conversations, resolve participants.",
+          "defaults": {
+            "pagination": "",
+            "indexStrategy": "",
+            "cacheTTL": ""
+          },
+          "notes": {
+            "purpose": "Manages conversation metadata: create/archive threads, list conversations, resolve participants.",
+            "keyDecisions": [
+              "Index (userId, lastMessageTs) for list",
+              "Cache hot conversation metadata"
+            ],
+            "failureModes": [
+              "N+1 queries on list",
+              "Hot partitions for active threads"
+            ]
+          }
+        }
+      },
+      {
+        "id": "message-service",
+        "position": {
+          "x": 250,
+          "y": 640
+        },
+        "data": {
+          "label": "Message Service",
+          "purpose": "Handles message send/receive: validate, persist, fanout to realtime and push pipelines.",
+          "defaults": {
+            "idempotencyKey": "",
+            "ordering": "",
+            "retention": ""
+          },
+          "notes": {
+            "purpose": "Handles message send/receive: validate, persist, fanout to realtime and push pipelines.",
+            "keyDecisions": [
+              "Idempotency key per message; partition by conversationId",
+              "Fanout: event-log for realtime, queue for push"
+            ],
+            "failureModes": [
+              "Duplicate messages without idempotency",
+              "Ordering breaks under partition rebalance"
+            ]
+          }
+        }
+      },
+      {
+        "id": "message-store",
+        "position": {
+          "x": 250,
+          "y": 720
+        },
+        "data": {
+          "label": "Message Store (Sharded KV/Wide-Column)",
+          "purpose": "Durable storage for chat messages; sharded by conversationId or (conversationId, messageId) for scale.",
+          "defaults": {
+            "partitionKey": "",
+            "sortKey": "",
+            "ttl": "",
+            "compaction": ""
+          },
+          "notes": {
+            "purpose": "Durable storage for chat messages; sharded by conversationId or (conversationId, messageId) for scale.",
+            "keyDecisions": [
+              "Partition key: conversationId; sort key: messageId or timestamp",
+              "Wide-column or KV; TTL for retention"
+            ],
+            "failureModes": [
+              "Hot partition for viral threads",
+              "Uneven shard distribution"
+            ]
+          }
+        }
+      },
+      {
+        "id": "conversation-metadata-store",
+        "position": {
+          "x": 250,
+          "y": 800
+        },
+        "data": {
+          "label": "Conversation Metadata Store",
+          "purpose": "Stores conversation metadata: participants, last message timestamp, read receipts.",
+          "defaults": {
+            "indexes": "",
+            "partitionKey": "",
+            "cacheLayer": ""
+          },
+          "notes": {
+            "purpose": "Stores conversation metadata: participants, last message timestamp, read receipts.",
+            "keyDecisions": [
+              "Document or SQL; index for list-by-user",
+              "Eventual consistency for read receipts OK"
+            ],
+            "failureModes": [
+              "Hot rows for active conversations",
+              "Read-after-write consistency gaps"
+            ]
+          }
+        }
+      },
+      {
+        "id": "event-log",
+        "position": {
+          "x": 250,
+          "y": 880
+        },
+        "data": {
+          "label": "Event Log / Stream",
+          "purpose": "Durable ordered log for high-throughput event streaming and replay.",
+          "defaults": {
+            "partitions": "",
+            "replication": "",
+            "retention": "",
+            "compaction": ""
+          },
+          "notes": {
+            "purpose": "Durable ordered log for high-throughput event streaming and replay.",
+            "keyDecisions": [
+              "Partition by conversationId for ordering",
+              "Retention policy; compaction for deletes"
+            ],
+            "failureModes": [
+              "Hot partition; consumer lag",
+              "Rebalancing storms"
+            ]
+          }
+        }
+      },
+      {
+        "id": "worker",
+        "position": {
+          "x": 250,
+          "y": 960
+        },
+        "data": {
+          "label": "Worker",
+          "purpose": "Consumes async jobs/events; performs background processing.",
+          "defaults": {
+            "concurrency": "",
+            "retries": "",
+            "idempotency": "",
+            "batchSize": ""
+          },
+          "notes": {
+            "purpose": "Consumes async jobs/events; performs background processing.",
+            "keyDecisions": [
+              "Idempotent processing; DLQ for poison",
+              "Scale consumers with partition count"
+            ],
+            "failureModes": [
+              "Poison messages block partition",
+              "Retry storms without backoff"
+            ]
+          }
+        }
+      },
+      {
+        "id": "dlq",
+        "position": {
+          "x": 250,
+          "y": 1040
+        },
+        "data": {
+          "label": "Dead Letter Queue",
+          "purpose": "Isolates poison messages for inspection and reprocessing without blocking pipelines.",
+          "defaults": {
+            "maxReceiveCount": "",
+            "redrivePolicy": ""
+          },
+          "notes": {
+            "purpose": "Isolates poison messages for inspection and reprocessing without blocking pipelines.",
+            "keyDecisions": [
+              "Max retries before DLQ; alert on depth",
+              "Manual triage and redrive"
+            ],
+            "failureModes": [
+              "Silent accumulation without monitoring",
+              "Reprocessing without fix"
+            ]
+          }
+        }
+      },
+      {
+        "id": "notification-service",
+        "position": {
+          "x": 250,
+          "y": 1120
+        },
+        "data": {
+          "label": "Notification Service (Push)",
+          "purpose": "Sends push notifications to offline users via APNs/FCM; batches and retries.",
+          "defaults": {
+            "batchSize": "",
+            "retryPolicy": "",
+            "deviceTokenRefresh": ""
+          },
+          "notes": {
+            "purpose": "Sends push notifications to offline users via APNs/FCM; batches and retries.",
+            "keyDecisions": [
+              "Batch payloads; retry with exponential backoff",
+              "Refresh device tokens periodically"
+            ],
+            "failureModes": [
+              "Token expiry causes silent drops",
+              "Provider rate limits"
+            ]
+          }
+        }
+      },
+      {
+        "id": "object-storage",
+        "position": {
+          "x": 250,
+          "y": 1200
+        },
+        "data": {
+          "label": "Object Storage",
+          "purpose": "Stores large blobs (images/videos/files); durable and cost-effective.",
+          "defaults": {
+            "storageClass": "",
+            "lifecyclePolicy": "",
+            "versioning": "",
+            "multipartUpload": ""
+          },
+          "notes": {
+            "purpose": "Stores large blobs (images/videos/files); durable and cost-effective.",
+            "keyDecisions": [
+              "Presigned URLs for direct upload",
+              "Lifecycle policies for archival"
+            ],
+            "failureModes": [
+              "Eventual consistency edge cases",
+              "Hot prefix for popular media"
+            ]
+          }
+        }
+      },
+      {
+        "id": "cdn",
+        "position": {
+          "x": 250,
+          "y": 1280
+        },
+        "data": {
+          "label": "CDN",
+          "purpose": "Caches and serves static and cacheable dynamic content close to users; reduces origin load.",
+          "defaults": {
+            "cacheTTL": "",
+            "cacheKey": "",
+            "staleWhileRevalidate": "",
+            "purge": "",
+            "geoRestrictions": ""
+          },
+          "notes": {
+            "purpose": "Caches and serves static and cacheable dynamic content close to users; reduces origin load.",
+            "keyDecisions": [
+              "Cache media by content hash or path",
+              "Purge on update; stale-while-revalidate"
+            ],
+            "failureModes": [
+              "Cache poisoning",
+              "Origin overload on miss spike"
+            ]
+          }
+        }
+      },
+      {
+        "id": "media-service",
+        "position": {
+          "x": 250,
+          "y": 1360
+        },
+        "data": {
+          "label": "Media Service",
+          "purpose": "Handles image/video upload, transcoding, thumbnails; stores in object storage, serves via CDN.",
+          "defaults": {
+            "presignedUpload": "",
+            "transcodingPipeline": "",
+            "thumbnailSize": ""
+          },
+          "notes": {
+            "purpose": "Handles image/video upload, transcoding, thumbnails; stores in object storage, serves via CDN.",
+            "keyDecisions": [
+              "Async transcoding; store original + variants",
+              "Thumbnail generation pipeline"
+            ],
+            "failureModes": [
+              "Upload timeout for large files",
+              "Transcoding backlog"
+            ]
+          }
+        }
+      },
+      {
+        "id": "metrics",
+        "position": {
+          "x": 250,
+          "y": 1440
+        },
+        "data": {
+          "label": "Metrics",
+          "purpose": "Collects time-series measurements for monitoring and alerting.",
+          "defaults": {
+            "cardinalityGuards": "",
+            "scrapeInterval": "",
+            "retention": ""
+          },
+          "notes": {
+            "purpose": "Collects time-series measurements for monitoring and alerting.",
+            "keyDecisions": [
+              "Cardinality guards; sample high-volume metrics",
+              "SLI/SLO dashboards"
+            ],
+            "failureModes": [
+              "High cardinality costs",
+              "Missing metrics"
+            ]
+          }
+        }
+      },
+      {
+        "id": "logging",
+        "position": {
+          "x": 250,
+          "y": 1520
+        },
+        "data": {
+          "label": "Logging",
+          "purpose": "Stores logs for debugging/auditing; supports search and retention.",
+          "defaults": {
+            "sampling": "",
+            "retention": "",
+            "redaction": ""
+          },
+          "notes": {
+            "purpose": "Stores logs for debugging/auditing; supports search and retention.",
+            "keyDecisions": [
+              "Structured JSON; correlation IDs",
+              "Sampling for high-volume paths"
+            ],
+            "failureModes": [
+              "PII leakage",
+              "Cost explosion"
+            ]
+          }
+        }
+      },
+      {
+        "id": "tracing",
+        "position": {
+          "x": 250,
+          "y": 1600
+        },
+        "data": {
+          "label": "Tracing",
+          "purpose": "Distributed tracing to understand request paths and latency contributors.",
+          "defaults": {
+            "sampling": "",
+            "propagation": "",
+            "retention": ""
+          },
+          "notes": {
+            "purpose": "Distributed tracing to understand request paths and latency contributors.",
+            "keyDecisions": [
+              "Sample 1–10% of requests",
+              "Propagate trace context across services"
+            ],
+            "failureModes": [
+              "Missing propagation",
+              "Sampling hides tail latencies"
+            ]
+          }
+        }
+      }
+    ],
+    "edges": [
+      {
+        "id": "e-0-web-app-api-gateway",
+        "source": "web-app",
+        "target": "api-gateway"
+      },
+      {
+        "id": "e-1-api-gateway-edge-rate-limiter",
+        "source": "api-gateway",
+        "target": "edge-rate-limiter"
+      },
+      {
+        "id": "e-2-edge-rate-limiter-load-balancer-l7",
+        "source": "edge-rate-limiter",
+        "target": "load-balancer-l7"
+      },
+      {
+        "id": "e-3-api-gateway-auth-service",
+        "source": "api-gateway",
+        "target": "auth-service"
+      },
+      {
+        "id": "e-4-load-balancer-l7-message-service",
+        "source": "load-balancer-l7",
+        "target": "message-service"
+      },
+      {
+        "id": "e-5-load-balancer-l7-conversation-service",
+        "source": "load-balancer-l7",
+        "target": "conversation-service"
+      },
+      {
+        "id": "e-6-load-balancer-l7-realtime-gateway",
+        "source": "load-balancer-l7",
+        "target": "realtime-gateway"
+      },
+      {
+        "id": "e-7-message-service-message-store",
+        "source": "message-service",
+        "target": "message-store"
+      },
+      {
+        "id": "e-8-message-service-conversation-metadata-store",
+        "source": "message-service",
+        "target": "conversation-metadata-store"
+      },
+      {
+        "id": "e-9-message-service-event-log",
+        "source": "message-service",
+        "target": "event-log"
+      },
+      {
+        "id": "e-10-event-log-worker",
+        "source": "event-log",
+        "target": "worker"
+      },
+      {
+        "id": "e-11-worker-realtime-gateway",
+        "source": "worker",
+        "target": "realtime-gateway"
+      },
+      {
+        "id": "e-12-worker-notification-service",
+        "source": "worker",
+        "target": "notification-service"
+      },
+      {
+        "id": "e-13-worker-dlq",
+        "source": "worker",
+        "target": "dlq"
+      },
+      {
+        "id": "e-14-realtime-gateway-presence-service",
+        "source": "realtime-gateway",
+        "target": "presence-service"
+      },
+      {
+        "id": "e-15-message-service-media-service",
+        "source": "message-service",
+        "target": "media-service"
+      },
+      {
+        "id": "e-16-media-service-object-storage",
+        "source": "media-service",
+        "target": "object-storage"
+      },
+      {
+        "id": "e-17-media-service-cdn",
+        "source": "media-service",
+        "target": "cdn"
+      },
+      {
+        "id": "e-18-message-service-metrics",
+        "source": "message-service",
+        "target": "metrics"
+      },
+      {
+        "id": "e-19-conversation-service-metrics",
+        "source": "conversation-service",
+        "target": "metrics"
+      },
+      {
+        "id": "e-20-worker-metrics",
+        "source": "worker",
+        "target": "metrics"
+      },
+      {
+        "id": "e-21-realtime-gateway-metrics",
+        "source": "realtime-gateway",
+        "target": "metrics"
+      },
+      {
+        "id": "e-22-notification-service-metrics",
+        "source": "notification-service",
+        "target": "metrics"
+      },
+      {
+        "id": "e-23-message-service-logging",
+        "source": "message-service",
+        "target": "logging"
+      },
+      {
+        "id": "e-24-message-service-tracing",
+        "source": "message-service",
+        "target": "tracing"
+      }
+    ]
+  },
+  "suggestedNodes": [
+    {
+      "type": "web-app",
+      "label": "Web App / UI",
+      "reason": "Client-facing UI; calls APIs; manages user interactions."
+    },
+    {
+      "type": "load-balancer-l7",
+      "label": "Load Balancer (L7)",
+      "reason": "Distributes HTTP traffic across healthy instances; supports routing rules."
+    },
+    {
+      "type": "api-gateway",
+      "label": "API Gateway",
+      "reason": "Single entry point for APIs; handles routing, auth, quotas, request shaping."
+    },
+    {
+      "type": "edge-rate-limiter",
+      "label": "Rate Limiter",
+      "reason": "Protects systems from overload and abuse; enforces per-user/IP/API limits."
+    },
+    {
+      "type": "auth-service",
+      "label": "Auth Service",
+      "reason": "Issues/validates credentials (sessions, tokens); enforces authentication flows."
+    },
+    {
+      "type": "realtime-gateway",
+      "label": "Realtime Gateway (WebSocket)",
+      "reason": "Maintains WebSocket connections for real-time bidirectional messaging; routes messages to connected clients."
+    },
+    {
+      "type": "presence-service",
+      "label": "Presence Service",
+      "reason": "Tracks online/offline status of users; supports last-seen, typing indicators, and room membership."
+    },
+    {
+      "type": "conversation-service",
+      "label": "Conversation Service",
+      "reason": "Manages conversation metadata: create/archive threads, list conversations, resolve participants."
+    },
+    {
+      "type": "message-service",
+      "label": "Message Service",
+      "reason": "Handles message send/receive: validate, persist, fanout to realtime and push pipelines."
+    },
+    {
+      "type": "message-store",
+      "label": "Message Store (Sharded KV/Wide-Column)",
+      "reason": "Durable storage for chat messages; sharded by conversationId or (conversationId, messageId) for scale."
+    },
+    {
+      "type": "conversation-metadata-store",
+      "label": "Conversation Metadata Store",
+      "reason": "Stores conversation metadata: participants, last message timestamp, read receipts."
+    },
+    {
+      "type": "event-log",
+      "label": "Event Log / Stream",
+      "reason": "Durable ordered log for high-throughput event streaming and replay."
+    },
+    {
+      "type": "worker",
+      "label": "Worker",
+      "reason": "Consumes async jobs/events; performs background processing."
+    },
+    {
+      "type": "dlq",
+      "label": "Dead Letter Queue",
+      "reason": "Isolates poison messages for inspection and reprocessing without blocking pipelines."
+    },
+    {
+      "type": "notification-service",
+      "label": "Notification Service (Push)",
+      "reason": "Sends push notifications to offline users via APNs/FCM; batches and retries."
+    },
+    {
+      "type": "object-storage",
+      "label": "Object Storage",
+      "reason": "Stores large blobs (images/videos/files); durable and cost-effective."
+    },
+    {
+      "type": "cdn",
+      "label": "CDN",
+      "reason": "Caches and serves static and cacheable dynamic content close to users; reduces origin load."
+    },
+    {
+      "type": "media-service",
+      "label": "Media Service",
+      "reason": "Handles image/video upload, transcoding, thumbnails; stores in object storage, serves via CDN."
+    },
+    {
+      "type": "metrics",
+      "label": "Metrics",
+      "reason": "Collects time-series measurements for monitoring and alerting."
+    },
+    {
+      "type": "logging",
+      "label": "Logging",
+      "reason": "Stores logs for debugging/auditing; supports search and retention."
+    },
+    {
+      "type": "tracing",
+      "label": "Tracing",
+      "reason": "Distributed tracing to understand request paths and latency contributors."
+    }
+  ],
+  "suggestedEdges": [
+    {
+      "source": "web-app",
+      "target": "api-gateway"
+    },
+    {
+      "source": "api-gateway",
+      "target": "edge-rate-limiter"
+    },
+    {
+      "source": "edge-rate-limiter",
+      "target": "load-balancer-l7"
+    },
+    {
+      "source": "api-gateway",
+      "target": "auth-service"
+    },
+    {
+      "source": "load-balancer-l7",
+      "target": "message-service"
+    },
+    {
+      "source": "load-balancer-l7",
+      "target": "conversation-service"
+    },
+    {
+      "source": "load-balancer-l7",
+      "target": "realtime-gateway"
+    },
+    {
+      "source": "message-service",
+      "target": "message-store"
+    },
+    {
+      "source": "message-service",
+      "target": "conversation-metadata-store"
+    },
+    {
+      "source": "message-service",
+      "target": "event-log"
+    },
+    {
+      "source": "event-log",
+      "target": "worker"
+    },
+    {
+      "source": "worker",
+      "target": "realtime-gateway"
+    },
+    {
+      "source": "worker",
+      "target": "notification-service"
+    },
+    {
+      "source": "worker",
+      "target": "dlq"
+    },
+    {
+      "source": "realtime-gateway",
+      "target": "presence-service"
+    },
+    {
+      "source": "message-service",
+      "target": "media-service"
+    },
+    {
+      "source": "media-service",
+      "target": "object-storage"
+    },
+    {
+      "source": "media-service",
+      "target": "cdn"
+    },
+    {
+      "source": "message-service",
+      "target": "metrics"
+    },
+    {
+      "source": "conversation-service",
+      "target": "metrics"
+    },
+    {
+      "source": "worker",
+      "target": "metrics"
+    },
+    {
+      "source": "realtime-gateway",
+      "target": "metrics"
+    },
+    {
+      "source": "notification-service",
+      "target": "metrics"
+    },
+    {
+      "source": "message-service",
+      "target": "logging"
+    },
+    {
+      "source": "message-service",
+      "target": "tracing"
+    }
+  ],
+  "packVersion": 2
+}

@@ -1,0 +1,2180 @@
+{
+  "id": "metrics-logging",
+  "title": "Design Metrics and Logging",
+  "problemStatement": "Design Design Metrics and Logging\nDesign Design Metrics and Logging\nDesign Design Metrics and Logging\nCollect metrics and logs from many services.",
+  "functionalRequirements": [
+    "User can perform core actions",
+    "User can perform core actions",
+    "User can perform core actions",
+    "User can perform core actions",
+    "User can perform core actions",
+    "User can perform core actions"
+  ],
+  "diagramSpec": {
+    "nodes": [
+      {
+        "id": "web-app",
+        "type": "web-app",
+        "label": "Web App / UI",
+        "category": "client",
+        "description": "Client-facing UI; calls APIs; manages user interactions.",
+        "data": {
+          "notes": {
+            "purpose": "Client-facing UI; calls APIs; manages user interactions.",
+            "keyDecisions": [
+              "Configure cache",
+              "Follow best practices for scale"
+            ],
+            "failureModes": [
+              "stale UI state",
+              "over-fetching"
+            ]
+          }
+        },
+        "details": {
+          "purpose": "Client-facing UI; calls APIs; manages user interactions.",
+          "defaults": {
+            "cache": "",
+            "prefetch": "",
+            "offlineMode": ""
+          },
+          "notes": {
+            "purpose": "Client-facing UI; calls APIs; manages user interactions.",
+            "keyDecisions": [
+              "Configure cache",
+              "Follow best practices for scale"
+            ],
+            "failureModes": [
+              "stale UI state",
+              "over-fetching"
+            ]
+          }
+        },
+        "justification": {
+          "reasons": [
+            {
+              "type": "FR",
+              "text": "User entry point for all actions"
+            },
+            {
+              "type": "NFR",
+              "text": "Required for any user-facing system"
+            }
+          ],
+          "tradeoffs": "",
+          "failureModes": "",
+          "metrics": {}
+        }
+      },
+      {
+        "id": "cdn",
+        "type": "cdn",
+        "label": "CDN",
+        "category": "edge",
+        "description": "Caches and serves static and cacheable dynamic content close to users; reduces origin load.",
+        "data": {
+          "notes": {
+            "purpose": "Caches and serves static and cacheable dynamic content close to users; reduces origin load.",
+            "keyDecisions": [
+              "Cache media by content hash or path",
+              "Purge on update; stale-while-revalidate"
+            ],
+            "failureModes": [
+              "Cache poisoning",
+              "Origin overload on miss spike"
+            ]
+          }
+        },
+        "details": {
+          "purpose": "Caches and serves static and cacheable dynamic content close to users; reduces origin load.",
+          "defaults": {
+            "cacheTTL": "",
+            "cacheKey": "",
+            "staleWhileRevalidate": "",
+            "purge": "",
+            "geoRestrictions": ""
+          },
+          "notes": {
+            "purpose": "Caches and serves static and cacheable dynamic content close to users; reduces origin load.",
+            "keyDecisions": [
+              "Cache media by content hash or path",
+              "Purge on update; stale-while-revalidate"
+            ],
+            "failureModes": [
+              "Cache poisoning",
+              "Origin overload on miss spike"
+            ]
+          }
+        },
+        "justification": {
+          "reasons": [
+            {
+              "type": "FAILURE_MITIGATION",
+              "text": "Cache miss falls back to origin; stale content risk"
+            },
+            {
+              "type": "FR",
+              "text": "Serve static/media at edge"
+            },
+            {
+              "type": "NFR",
+              "text": "Latency reduction and origin offload"
+            }
+          ],
+          "tradeoffs": "cache poisoning; stale content; origin overload when cache miss spikes",
+          "failureModes": "cache poisoning; stale content; origin overload when cache miss spikes",
+          "metrics": {}
+        }
+      },
+      {
+        "id": "waf",
+        "type": "waf",
+        "label": "WAF",
+        "category": "security",
+        "description": "Blocks common web attacks (SQLi/XSS), bots, and abusive patterns at the edge.",
+        "data": {
+          "notes": {
+            "purpose": "Blocks common web attacks (SQLi/XSS), bots, and abusive patterns at the edge.",
+            "keyDecisions": [
+              "Configure rules",
+              "Follow best practices for scale"
+            ],
+            "failureModes": [
+              "false positives blocking good traffic",
+              "rules drift"
+            ]
+          }
+        },
+        "details": {
+          "purpose": "Blocks common web attacks (SQLi/XSS), bots, and abusive patterns at the edge.",
+          "defaults": {
+            "rules": "",
+            "botProtection": "",
+            "ipAllowDeny": "",
+            "rateRules": ""
+          },
+          "notes": {
+            "purpose": "Blocks common web attacks (SQLi/XSS), bots, and abusive patterns at the edge.",
+            "keyDecisions": [
+              "Configure rules",
+              "Follow best practices for scale"
+            ],
+            "failureModes": [
+              "false positives blocking good traffic",
+              "rules drift"
+            ]
+          }
+        },
+        "justification": {
+          "reasons": [
+            {
+              "type": "FAILURE_MITIGATION",
+              "text": "Mitigates attack traffic; false positives can block good traffic"
+            },
+            {
+              "type": "NFR",
+              "text": "Security: blocks SQLi, XSS, bots"
+            }
+          ],
+          "tradeoffs": "false positives blocking good traffic; rules drift",
+          "failureModes": "false positives blocking good traffic; rules drift",
+          "metrics": {}
+        }
+      },
+      {
+        "id": "edge-rate-limiter",
+        "type": "edge-rate-limiter",
+        "label": "Rate Limiter",
+        "category": "reliability",
+        "description": "Protects systems from overload and abuse; enforces per-user/IP/API limits.",
+        "data": {
+          "notes": {
+            "purpose": "Protects systems from overload and abuse; enforces per-user/IP/API limits.",
+            "keyDecisions": [
+              "Token bucket or sliding window per user/IP",
+              "Distributed state (Redis) for global limits"
+            ],
+            "failureModes": [
+              "Hot keys on limiter storage",
+              "Incorrect keying causes unfair limits"
+            ]
+          }
+        },
+        "details": {
+          "purpose": "Protects systems from overload and abuse; enforces per-user/IP/API limits.",
+          "defaults": {
+            "limitKey": "",
+            "limits": "",
+            "burst": "",
+            "window": "",
+            "tokenBucket": "",
+            "leakyBucket": ""
+          },
+          "notes": {
+            "purpose": "Protects systems from overload and abuse; enforces per-user/IP/API limits.",
+            "keyDecisions": [
+              "Token bucket or sliding window per user/IP",
+              "Distributed state (Redis) for global limits"
+            ],
+            "failureModes": [
+              "Hot keys on limiter storage",
+              "Incorrect keying causes unfair limits"
+            ]
+          }
+        },
+        "justification": {
+          "reasons": [
+            {
+              "type": "FAILURE_MITIGATION",
+              "text": "Protects downstream from traffic spikes"
+            },
+            {
+              "type": "NFR",
+              "text": "Abuse protection and fairness"
+            }
+          ],
+          "tradeoffs": "hot keys on limiter storage; incorrect keying causing unfair limits",
+          "failureModes": "hot keys on limiter storage; incorrect keying causing unfair limits",
+          "metrics": {}
+        }
+      },
+      {
+        "id": "api-gateway",
+        "type": "api-gateway",
+        "label": "API Gateway",
+        "category": "edge",
+        "description": "Single entry point for APIs; handles routing, auth, quotas, request shaping.",
+        "data": {
+          "notes": {
+            "purpose": "Single entry point for APIs; handles routing, auth, quotas, request shaping.",
+            "keyDecisions": [
+              "Route by path/version; validate auth before backend",
+              "Centralize rate limits and request shaping"
+            ],
+            "failureModes": [
+              "SPOF; deploy HA with health checks",
+              "Misconfigured routes cause 404/5xx"
+            ]
+          }
+        },
+        "details": {
+          "purpose": "Single entry point for APIs; handles routing, auth, quotas, request shaping.",
+          "defaults": {
+            "routes": "",
+            "auth": "",
+            "quotas": "",
+            "timeouts": "",
+            "payloadLimits": ""
+          },
+          "notes": {
+            "purpose": "Single entry point for APIs; handles routing, auth, quotas, request shaping.",
+            "keyDecisions": [
+              "Route by path/version; validate auth before backend",
+              "Centralize rate limits and request shaping"
+            ],
+            "failureModes": [
+              "SPOF; deploy HA with health checks",
+              "Misconfigured routes cause 404/5xx"
+            ]
+          }
+        },
+        "justification": {
+          "reasons": [
+            {
+              "type": "FAILURE_MITIGATION",
+              "text": "SPOF; needs HA deployment"
+            },
+            {
+              "type": "FR",
+              "text": "Single API entry, auth, routing"
+            },
+            {
+              "type": "NFR",
+              "text": "Request shaping and quotas"
+            }
+          ],
+          "tradeoffs": "single point of failure; misconfigured routing; latency overhead",
+          "failureModes": "single point of failure; misconfigured routing; latency overhead",
+          "metrics": {}
+        }
+      },
+      {
+        "id": "load-balancer-l7",
+        "type": "load-balancer-l7",
+        "label": "Load Balancer (L7)",
+        "category": "edge",
+        "description": "Distributes HTTP traffic across healthy instances; supports routing rules.",
+        "data": {
+          "notes": {
+            "purpose": "Distributes HTTP traffic across healthy instances; supports routing rules.",
+            "keyDecisions": [
+              "Configure algorithm",
+              "Follow best practices for scale"
+            ],
+            "failureModes": [
+              "bad health checks flapping",
+              "uneven load distribution"
+            ]
+          }
+        },
+        "details": {
+          "purpose": "Distributes HTTP traffic across healthy instances; supports routing rules.",
+          "defaults": {
+            "algorithm": "",
+            "healthChecks": "",
+            "timeouts": "",
+            "connectionDraining": ""
+          },
+          "notes": {
+            "purpose": "Distributes HTTP traffic across healthy instances; supports routing rules.",
+            "keyDecisions": [
+              "Configure algorithm",
+              "Follow best practices for scale"
+            ],
+            "failureModes": [
+              "bad health checks flapping",
+              "uneven load distribution"
+            ]
+          }
+        },
+        "justification": {
+          "reasons": [
+            {
+              "type": "FAILURE_MITIGATION",
+              "text": "SPOF if single LB; health checks route around failures"
+            },
+            {
+              "type": "FR",
+              "text": "Routes HTTP requests to app instances"
+            },
+            {
+              "type": "NFR",
+              "text": "Availability and traffic distribution"
+            }
+          ],
+          "tradeoffs": "bad health checks flapping; uneven load distribution",
+          "failureModes": "bad health checks flapping; uneven load distribution",
+          "metrics": {}
+        }
+      },
+      {
+        "id": "app-service",
+        "type": "app-service",
+        "label": "App Service",
+        "category": "compute",
+        "description": "Core business logic service handling requests and orchestrating dependencies.",
+        "data": {
+          "notes": {
+            "purpose": "Core business logic service handling requests and orchestrating dependencies.",
+            "keyDecisions": [
+              "Configure autoscaling",
+              "Follow best practices for scale"
+            ],
+            "failureModes": [
+              "dependency timeouts cascading",
+              "resource exhaustion"
+            ]
+          }
+        },
+        "details": {
+          "purpose": "Core business logic service handling requests and orchestrating dependencies.",
+          "defaults": {
+            "autoscaling": "",
+            "timeouts": "",
+            "retries": "",
+            "circuitBreaker": ""
+          },
+          "notes": {
+            "purpose": "Core business logic service handling requests and orchestrating dependencies.",
+            "keyDecisions": [
+              "Configure autoscaling",
+              "Follow best practices for scale"
+            ],
+            "failureModes": [
+              "dependency timeouts cascading",
+              "resource exhaustion"
+            ]
+          }
+        },
+        "justification": {
+          "reasons": [
+            {
+              "type": "FAILURE_MITIGATION",
+              "text": "Stateless; instance failure only loses in-flight requests"
+            },
+            {
+              "type": "FR",
+              "text": "Business logic and request orchestration"
+            },
+            {
+              "type": "NFR",
+              "text": "Horizontal scaling of compute"
+            }
+          ],
+          "tradeoffs": "dependency timeouts cascading; resource exhaustion; thundering herd",
+          "failureModes": "dependency timeouts cascading; resource exhaustion; thundering herd",
+          "metrics": {}
+        }
+      },
+      {
+        "id": "stream-processor",
+        "type": "stream-processor",
+        "label": "Stream Processor",
+        "category": "analytics",
+        "description": "Processes streams for aggregation, enrichment, windowing; outputs derived streams.",
+        "data": {
+          "notes": {
+            "purpose": "Processes streams for aggregation, enrichment, windowing; outputs derived streams.",
+            "keyDecisions": [
+              "Configure windowing",
+              "Follow best practices for scale"
+            ],
+            "failureModes": [
+              "late events",
+              "state blowups"
+            ]
+          }
+        },
+        "details": {
+          "purpose": "Processes streams for aggregation, enrichment, windowing; outputs derived streams.",
+          "defaults": {
+            "windowing": "",
+            "watermarks": "",
+            "stateStore": "",
+            "checkpointing": ""
+          },
+          "notes": {
+            "purpose": "Processes streams for aggregation, enrichment, windowing; outputs derived streams.",
+            "keyDecisions": [
+              "Configure windowing",
+              "Follow best practices for scale"
+            ],
+            "failureModes": [
+              "late events",
+              "state blowups"
+            ]
+          }
+        },
+        "justification": {
+          "reasons": [
+            {
+              "type": "FAILURE_MITIGATION",
+              "text": "Late events; state blowup; checkpoint lag"
+            },
+            {
+              "type": "FR",
+              "text": "Real-time aggregation and enrichment"
+            },
+            {
+              "type": "NFR",
+              "text": "Stream analytics"
+            }
+          ],
+          "tradeoffs": "late events; state blowups; checkpoint lag",
+          "failureModes": "late events; state blowups; checkpoint lag",
+          "metrics": {}
+        }
+      },
+      {
+        "id": "data-warehouse",
+        "type": "data-warehouse",
+        "label": "Data Warehouse (OLAP)",
+        "category": "analytics",
+        "description": "Columnar analytics store for BI queries; optimized for scans/aggregations.",
+        "data": {
+          "notes": {
+            "purpose": "Columnar analytics store for BI queries; optimized for scans/aggregations.",
+            "keyDecisions": [
+              "Configure partitioning",
+              "Follow best practices for scale"
+            ],
+            "failureModes": [
+              "expensive scans",
+              "bad partitioning"
+            ]
+          }
+        },
+        "details": {
+          "purpose": "Columnar analytics store for BI queries; optimized for scans/aggregations.",
+          "defaults": {
+            "partitioning": "",
+            "clustering": "",
+            "retention": "",
+            "materializedViews": ""
+          },
+          "notes": {
+            "purpose": "Columnar analytics store for BI queries; optimized for scans/aggregations.",
+            "keyDecisions": [
+              "Configure partitioning",
+              "Follow best practices for scale"
+            ],
+            "failureModes": [
+              "expensive scans",
+              "bad partitioning"
+            ]
+          }
+        },
+        "justification": {
+          "reasons": [
+            {
+              "type": "FAILURE_MITIGATION",
+              "text": "Expensive scans; stale materializations"
+            },
+            {
+              "type": "FR",
+              "text": "BI queries and analytics"
+            },
+            {
+              "type": "NFR",
+              "text": "Columnar scan performance"
+            }
+          ],
+          "tradeoffs": "expensive scans; bad partitioning; stale materializations",
+          "failureModes": "expensive scans; bad partitioning; stale materializations",
+          "metrics": {}
+        }
+      },
+      {
+        "id": "sql-db",
+        "type": "sql-db",
+        "label": "SQL Database",
+        "category": "storage",
+        "description": "Relational storage with transactions and strong consistency options.",
+        "data": {
+          "notes": {
+            "purpose": "Relational storage with transactions and strong consistency options.",
+            "keyDecisions": [
+              "Configure indexes",
+              "Follow best practices for scale"
+            ],
+            "failureModes": [
+              "lock contention",
+              "replication lag"
+            ]
+          }
+        },
+        "details": {
+          "purpose": "Relational storage with transactions and strong consistency options.",
+          "defaults": {
+            "indexes": "",
+            "replication": "",
+            "partitioning": "",
+            "connectionPool": "",
+            "isolationLevel": ""
+          },
+          "notes": {
+            "purpose": "Relational storage with transactions and strong consistency options.",
+            "keyDecisions": [
+              "Configure indexes",
+              "Follow best practices for scale"
+            ],
+            "failureModes": [
+              "lock contention",
+              "replication lag"
+            ]
+          }
+        },
+        "justification": {
+          "reasons": [
+            {
+              "type": "FAILURE_MITIGATION",
+              "text": "Replication reduces data loss; failover to replica"
+            },
+            {
+              "type": "FR",
+              "text": "Primary persistent storage with transactions"
+            },
+            {
+              "type": "NFR",
+              "text": "Consistency and durability"
+            }
+          ],
+          "tradeoffs": "lock contention; replication lag; hot rows",
+          "failureModes": "lock contention; replication lag; hot rows",
+          "metrics": {}
+        }
+      },
+      {
+        "id": "sql-read-replica",
+        "type": "sql-read-replica",
+        "label": "SQL Read Replica",
+        "category": "storage",
+        "description": "Scales reads; offloads primary; may have replication lag.",
+        "data": {
+          "notes": {
+            "purpose": "Scales reads; offloads primary; may have replication lag.",
+            "keyDecisions": [
+              "Configure replicationMode",
+              "Follow best practices for scale"
+            ],
+            "failureModes": [
+              "stale reads due to lag",
+              "failover complexity"
+            ]
+          }
+        },
+        "details": {
+          "purpose": "Scales reads; offloads primary; may have replication lag.",
+          "defaults": {
+            "replicationMode": "",
+            "readRouting": "",
+            "lagBudget": ""
+          },
+          "notes": {
+            "purpose": "Scales reads; offloads primary; may have replication lag.",
+            "keyDecisions": [
+              "Configure replicationMode",
+              "Follow best practices for scale"
+            ],
+            "failureModes": [
+              "stale reads due to lag",
+              "failover complexity"
+            ]
+          }
+        },
+        "justification": {
+          "reasons": [
+            {
+              "type": "FAILURE_MITIGATION",
+              "text": "Replication lag; stale reads; failover complexity"
+            },
+            {
+              "type": "NFR",
+              "text": "Read scaling; offload primary"
+            }
+          ],
+          "tradeoffs": "stale reads due to lag; failover complexity",
+          "failureModes": "stale reads due to lag; failover complexity",
+          "metrics": {}
+        }
+      },
+      {
+        "id": "cache",
+        "type": "cache",
+        "label": "Cache",
+        "category": "caching",
+        "description": "Speeds reads and reduces backend load; stores computed/queried data.",
+        "data": {
+          "notes": {
+            "purpose": "Speeds reads and reduces backend load; stores computed/queried data.",
+            "keyDecisions": [
+              "Cache-aside for conversation/metadata",
+              "TTL + invalidation stream for freshness"
+            ],
+            "failureModes": [
+              "Stampede on miss",
+              "Stale data after write"
+            ]
+          }
+        },
+        "details": {
+          "purpose": "Speeds reads and reduces backend load; stores computed/queried data.",
+          "defaults": {
+            "ttl": "",
+            "evictionPolicy": "",
+            "maxMemory": "",
+            "sharding": "",
+            "replication": ""
+          },
+          "notes": {
+            "purpose": "Speeds reads and reduces backend load; stores computed/queried data.",
+            "keyDecisions": [
+              "Cache-aside for conversation/metadata",
+              "TTL + invalidation stream for freshness"
+            ],
+            "failureModes": [
+              "Stampede on miss",
+              "Stale data after write"
+            ]
+          }
+        },
+        "justification": {
+          "reasons": [
+            {
+              "type": "FAILURE_MITIGATION",
+              "text": "Stampede on miss; stale data; cache node failure"
+            },
+            {
+              "type": "FR",
+              "text": "Fast reads for hot data"
+            },
+            {
+              "type": "NFR",
+              "text": "Latency and DB load reduction"
+            }
+          ],
+          "tradeoffs": "stampede on miss; stale data; cache node failure causing DB overload",
+          "failureModes": "stampede on miss; stale data; cache node failure causing DB overload",
+          "metrics": {}
+        }
+      },
+      {
+        "id": "metrics",
+        "type": "metrics",
+        "label": "Metrics",
+        "category": "observability",
+        "description": "Collects time-series measurements for monitoring and alerting.",
+        "data": {
+          "notes": {
+            "purpose": "Collects time-series measurements for monitoring and alerting.",
+            "keyDecisions": [
+              "Cardinality guards; sample high-volume metrics",
+              "SLI/SLO dashboards"
+            ],
+            "failureModes": [
+              "High cardinality costs",
+              "Missing metrics"
+            ]
+          }
+        },
+        "details": {
+          "purpose": "Collects time-series measurements for monitoring and alerting.",
+          "defaults": {
+            "cardinalityGuards": "",
+            "scrapeInterval": "",
+            "retention": ""
+          },
+          "notes": {
+            "purpose": "Collects time-series measurements for monitoring and alerting.",
+            "keyDecisions": [
+              "Cardinality guards; sample high-volume metrics",
+              "SLI/SLO dashboards"
+            ],
+            "failureModes": [
+              "High cardinality costs",
+              "Missing metrics"
+            ]
+          }
+        },
+        "justification": {
+          "reasons": [
+            {
+              "type": "FAILURE_MITIGATION",
+              "text": "High cardinality costs; missing metrics"
+            },
+            {
+              "type": "NFR",
+              "text": "Monitoring and alerting"
+            }
+          ],
+          "tradeoffs": "high cardinality costs; missing metrics due to scraping issues",
+          "failureModes": "high cardinality costs; missing metrics due to scraping issues",
+          "metrics": {}
+        }
+      },
+      {
+        "id": "logging",
+        "type": "logging",
+        "label": "Logging",
+        "category": "observability",
+        "description": "Stores logs for debugging/auditing; supports search and retention.",
+        "data": {
+          "notes": {
+            "purpose": "Stores logs for debugging/auditing; supports search and retention.",
+            "keyDecisions": [
+              "Structured JSON; correlation IDs",
+              "Sampling for high-volume paths"
+            ],
+            "failureModes": [
+              "PII leakage",
+              "Cost explosion"
+            ]
+          }
+        },
+        "details": {
+          "purpose": "Stores logs for debugging/auditing; supports search and retention.",
+          "defaults": {
+            "sampling": "",
+            "retention": "",
+            "redaction": ""
+          },
+          "notes": {
+            "purpose": "Stores logs for debugging/auditing; supports search and retention.",
+            "keyDecisions": [
+              "Structured JSON; correlation IDs",
+              "Sampling for high-volume paths"
+            ],
+            "failureModes": [
+              "PII leakage",
+              "Cost explosion"
+            ]
+          }
+        },
+        "justification": {
+          "reasons": [
+            {
+              "type": "FAILURE_MITIGATION",
+              "text": "PII leakage; cost explosion"
+            },
+            {
+              "type": "NFR",
+              "text": "Debugging and audit trail"
+            }
+          ],
+          "tradeoffs": "PII leakage; cost explosion; missing correlation IDs",
+          "failureModes": "PII leakage; cost explosion; missing correlation IDs",
+          "metrics": {}
+        }
+      },
+      {
+        "id": "queue",
+        "type": "default",
+        "position": {
+          "x": 460,
+          "y": 200
+        },
+        "data": {
+          "label": "Queue",
+          "purpose": "Buffers tasks; decouples producers/consumers; smooths spikes.",
+          "source": "enrichment"
+        }
+      },
+      {
+        "id": "auth-service",
+        "type": "default",
+        "position": {
+          "x": 200,
+          "y": 280
+        },
+        "data": {
+          "label": "Auth Service",
+          "purpose": "Issues/validates credentials (sessions, tokens); enforces authentication flows.",
+          "source": "enrichment"
+        }
+      }
+    ],
+    "edges": [
+      {
+        "source": "web-app",
+        "target": "waf"
+      },
+      {
+        "source": "waf",
+        "target": "edge-rate-limiter"
+      },
+      {
+        "source": "edge-rate-limiter",
+        "target": "api-gateway"
+      },
+      {
+        "source": "api-gateway",
+        "target": "load-balancer-l7"
+      },
+      {
+        "source": "load-balancer-l7",
+        "target": "app-service"
+      },
+      {
+        "source": "app-service",
+        "target": "cache"
+      },
+      {
+        "source": "app-service",
+        "target": "sql-db"
+      },
+      {
+        "source": "app-service",
+        "target": "metrics"
+      },
+      {
+        "source": "app-service",
+        "target": "logging"
+      },
+      {
+        "source": "sql-db",
+        "target": "sql-read-replica"
+      },
+      {
+        "source": "app-service",
+        "target": "cdn"
+      }
+    ],
+    "notesByNodeId": {
+      "web-app": {
+        "purpose": "Client-facing UI; calls APIs; manages user interactions.",
+        "knobs": {
+          "cache": "",
+          "prefetch": "",
+          "offlineMode": ""
+        },
+        "tradeoffs": [],
+        "failureModes": [],
+        "interviewHooks": []
+      },
+      "cdn": {
+        "purpose": "Caches and serves static and cacheable dynamic content close to users; reduces origin load.",
+        "knobs": {
+          "cacheTTL": "",
+          "cacheKey": "",
+          "staleWhileRevalidate": "",
+          "purge": "",
+          "geoRestrictions": ""
+        },
+        "tradeoffs": "cache poisoning; stale content; origin overload when cache miss spikes",
+        "failureModes": "cache poisoning; stale content; origin overload when cache miss spikes",
+        "interviewHooks": []
+      },
+      "waf": {
+        "purpose": "Blocks common web attacks (SQLi/XSS), bots, and abusive patterns at the edge.",
+        "knobs": {
+          "rules": "",
+          "botProtection": "",
+          "ipAllowDeny": "",
+          "rateRules": ""
+        },
+        "tradeoffs": "false positives blocking good traffic; rules drift",
+        "failureModes": "false positives blocking good traffic; rules drift",
+        "interviewHooks": []
+      },
+      "edge-rate-limiter": {
+        "purpose": "Protects systems from overload and abuse; enforces per-user/IP/API limits.",
+        "knobs": {
+          "limitKey": "",
+          "limits": "",
+          "burst": "",
+          "window": "",
+          "tokenBucket": "",
+          "leakyBucket": ""
+        },
+        "tradeoffs": "hot keys on limiter storage; incorrect keying causing unfair limits",
+        "failureModes": "hot keys on limiter storage; incorrect keying causing unfair limits",
+        "interviewHooks": []
+      },
+      "api-gateway": {
+        "purpose": "Single entry point for APIs; handles routing, auth, quotas, request shaping.",
+        "knobs": {
+          "routes": "",
+          "auth": "",
+          "quotas": "",
+          "timeouts": "",
+          "payloadLimits": ""
+        },
+        "tradeoffs": "single point of failure; misconfigured routing; latency overhead",
+        "failureModes": "single point of failure; misconfigured routing; latency overhead",
+        "interviewHooks": []
+      },
+      "load-balancer-l7": {
+        "purpose": "Distributes HTTP traffic across healthy instances; supports routing rules.",
+        "knobs": {
+          "algorithm": "",
+          "healthChecks": "",
+          "timeouts": "",
+          "connectionDraining": ""
+        },
+        "tradeoffs": "bad health checks flapping; uneven load distribution",
+        "failureModes": "bad health checks flapping; uneven load distribution",
+        "interviewHooks": []
+      },
+      "app-service": {
+        "purpose": "Core business logic service handling requests and orchestrating dependencies.",
+        "knobs": {
+          "autoscaling": "",
+          "timeouts": "",
+          "retries": "",
+          "circuitBreaker": ""
+        },
+        "tradeoffs": "dependency timeouts cascading; resource exhaustion; thundering herd",
+        "failureModes": "dependency timeouts cascading; resource exhaustion; thundering herd",
+        "interviewHooks": []
+      },
+      "stream-processor": {
+        "purpose": "Processes streams for aggregation, enrichment, windowing; outputs derived streams.",
+        "knobs": {
+          "windowing": "",
+          "watermarks": "",
+          "stateStore": "",
+          "checkpointing": ""
+        },
+        "tradeoffs": "late events; state blowups; checkpoint lag",
+        "failureModes": "late events; state blowups; checkpoint lag",
+        "interviewHooks": []
+      },
+      "data-warehouse": {
+        "purpose": "Columnar analytics store for BI queries; optimized for scans/aggregations.",
+        "knobs": {
+          "partitioning": "",
+          "clustering": "",
+          "retention": "",
+          "materializedViews": ""
+        },
+        "tradeoffs": "expensive scans; bad partitioning; stale materializations",
+        "failureModes": "expensive scans; bad partitioning; stale materializations",
+        "interviewHooks": []
+      },
+      "sql-db": {
+        "purpose": "Relational storage with transactions and strong consistency options.",
+        "knobs": {
+          "indexes": "",
+          "replication": "",
+          "partitioning": "",
+          "connectionPool": "",
+          "isolationLevel": ""
+        },
+        "tradeoffs": "lock contention; replication lag; hot rows",
+        "failureModes": "lock contention; replication lag; hot rows",
+        "interviewHooks": []
+      },
+      "sql-read-replica": {
+        "purpose": "Scales reads; offloads primary; may have replication lag.",
+        "knobs": {
+          "replicationMode": "",
+          "readRouting": "",
+          "lagBudget": ""
+        },
+        "tradeoffs": "stale reads due to lag; failover complexity",
+        "failureModes": "stale reads due to lag; failover complexity",
+        "interviewHooks": []
+      },
+      "cache": {
+        "purpose": "Speeds reads and reduces backend load; stores computed/queried data.",
+        "knobs": {
+          "ttl": "",
+          "evictionPolicy": "",
+          "maxMemory": "",
+          "sharding": "",
+          "replication": ""
+        },
+        "tradeoffs": "stampede on miss; stale data; cache node failure causing DB overload",
+        "failureModes": "stampede on miss; stale data; cache node failure causing DB overload",
+        "interviewHooks": []
+      },
+      "metrics": {
+        "purpose": "Collects time-series measurements for monitoring and alerting.",
+        "knobs": {
+          "cardinalityGuards": "",
+          "scrapeInterval": "",
+          "retention": ""
+        },
+        "tradeoffs": "high cardinality costs; missing metrics due to scraping issues",
+        "failureModes": "high cardinality costs; missing metrics due to scraping issues",
+        "interviewHooks": []
+      },
+      "logging": {
+        "purpose": "Stores logs for debugging/auditing; supports search and retention.",
+        "knobs": {
+          "sampling": "",
+          "retention": "",
+          "redaction": ""
+        },
+        "tradeoffs": "PII leakage; cost explosion; missing correlation IDs",
+        "failureModes": "PII leakage; cost explosion; missing correlation IDs",
+        "interviewHooks": []
+      },
+      "queue": {
+        "purpose": "Buffers tasks; decouples producers/consumers; smooths spikes.",
+        "knobs": [
+          "visibilityTimeout",
+          "maxRetries",
+          "dlq",
+          "fifo",
+          "orderingKey"
+        ],
+        "tradeoffs": [
+          "backlog growth",
+          "duplicate delivery",
+          "hot partitions (FIFO)"
+        ],
+        "failureModes": [
+          "backlog growth",
+          "duplicate delivery",
+          "hot partitions (FIFO)"
+        ],
+        "interviewHooks": [
+          "At-least-once vs exactly-once? Backpressure? DLQ?"
+        ]
+      },
+      "auth-service": {
+        "purpose": "Issues/validates credentials (sessions, tokens); enforces authentication flows.",
+        "knobs": [
+          "tokenTTL",
+          "refreshTTL",
+          "rotation",
+          "mfa"
+        ],
+        "tradeoffs": [
+          "token replay if not bound",
+          "clock skew issues",
+          "session store overload"
+        ],
+        "failureModes": [
+          "token replay if not bound",
+          "clock skew issues",
+          "session store overload"
+        ],
+        "interviewHooks": [
+          "JWT vs session? Revocation? Rotation?"
+        ]
+      }
+    }
+  },
+  "scoringRubric": [
+    "Cardinality",
+    "Retention"
+  ],
+  "antiPatterns": [
+    "Unbounded cardinality"
+  ],
+  "nonFunctionalRequirements": [
+    "System should be scalable and available",
+    "System should be scalable and available",
+    "System should be scalable and available",
+    "System should be scalable and available",
+    "System should be scalable and available",
+    "System should be scalable and available"
+  ],
+  "constraintsAssumptions": [
+    "Assume standard cloud infrastructure",
+    "Assume moderate initial scale",
+    "Assume eventual consistency acceptable where appropriate",
+    "Assume single region initially",
+    "Assume existing auth system"
+  ],
+  "validation": {
+    "coverage": [
+      {
+        "nodeId": "web-app",
+        "justifications": [
+          {
+            "type": "functional",
+            "index": 0,
+            "text": "User can perform core actions"
+          },
+          {
+            "type": "functional",
+            "index": 1,
+            "text": "User can perform core actions"
+          },
+          {
+            "type": "functional",
+            "index": 2,
+            "text": "User can perform core actions"
+          },
+          {
+            "type": "functional",
+            "index": 3,
+            "text": "User can perform core actions"
+          },
+          {
+            "type": "functional",
+            "index": 4,
+            "text": "User can perform core actions"
+          },
+          {
+            "type": "functional",
+            "index": 5,
+            "text": "User can perform core actions"
+          }
+        ]
+      },
+      {
+        "nodeId": "cdn",
+        "justifications": [
+          {
+            "type": "implicit",
+            "text": "Core infrastructure"
+          }
+        ]
+      },
+      {
+        "nodeId": "waf",
+        "justifications": [
+          {
+            "type": "implicit",
+            "text": "Core infrastructure"
+          }
+        ]
+      },
+      {
+        "nodeId": "edge-rate-limiter",
+        "justifications": [
+          {
+            "type": "implicit",
+            "text": "Core infrastructure"
+          }
+        ]
+      },
+      {
+        "nodeId": "api-gateway",
+        "justifications": [
+          {
+            "type": "implicit",
+            "text": "Core infrastructure"
+          }
+        ]
+      },
+      {
+        "nodeId": "load-balancer-l7",
+        "justifications": [
+          {
+            "type": "implicit",
+            "text": "Core infrastructure"
+          }
+        ]
+      },
+      {
+        "nodeId": "app-service",
+        "justifications": [
+          {
+            "type": "functional",
+            "index": 0,
+            "text": "User can perform core actions"
+          },
+          {
+            "type": "functional",
+            "index": 1,
+            "text": "User can perform core actions"
+          },
+          {
+            "type": "functional",
+            "index": 2,
+            "text": "User can perform core actions"
+          },
+          {
+            "type": "functional",
+            "index": 3,
+            "text": "User can perform core actions"
+          },
+          {
+            "type": "functional",
+            "index": 4,
+            "text": "User can perform core actions"
+          },
+          {
+            "type": "functional",
+            "index": 5,
+            "text": "User can perform core actions"
+          }
+        ]
+      },
+      {
+        "nodeId": "stream-processor",
+        "justifications": [
+          {
+            "type": "implicit",
+            "text": "Core infrastructure"
+          }
+        ]
+      },
+      {
+        "nodeId": "data-warehouse",
+        "justifications": [
+          {
+            "type": "implicit",
+            "text": "Core infrastructure"
+          }
+        ]
+      },
+      {
+        "nodeId": "sql-db",
+        "justifications": [
+          {
+            "type": "implicit",
+            "text": "Core infrastructure"
+          }
+        ]
+      },
+      {
+        "nodeId": "sql-read-replica",
+        "justifications": [
+          {
+            "type": "implicit",
+            "text": "Core infrastructure"
+          }
+        ]
+      },
+      {
+        "nodeId": "cache",
+        "justifications": [
+          {
+            "type": "implicit",
+            "text": "Core infrastructure"
+          }
+        ]
+      },
+      {
+        "nodeId": "metrics",
+        "justifications": [
+          {
+            "type": "implicit",
+            "text": "Core infrastructure"
+          }
+        ]
+      },
+      {
+        "nodeId": "logging",
+        "justifications": [
+          {
+            "type": "implicit",
+            "text": "Core infrastructure"
+          }
+        ]
+      },
+      {
+        "nodeId": "queue",
+        "justifications": [
+          {
+            "type": "implicit",
+            "text": "Core infrastructure"
+          }
+        ]
+      },
+      {
+        "nodeId": "auth-service",
+        "justifications": [
+          {
+            "type": "implicit",
+            "text": "Core infrastructure"
+          }
+        ]
+      }
+    ],
+    "nodeValidation": [
+      {
+        "nodeId": "web-app",
+        "status": "core",
+        "justifications": [
+          "User can perform core actions",
+          "User can perform core actions",
+          "User can perform core actions",
+          "User can perform core actions",
+          "User can perform core actions",
+          "User can perform core actions"
+        ],
+        "reason": null,
+        "suggestion": null
+      },
+      {
+        "nodeId": "cdn",
+        "status": "optional",
+        "justifications": [
+          "Core infrastructure"
+        ],
+        "reason": null,
+        "suggestion": null
+      },
+      {
+        "nodeId": "waf",
+        "status": "optional",
+        "justifications": [
+          "Core infrastructure"
+        ],
+        "reason": null,
+        "suggestion": null
+      },
+      {
+        "nodeId": "edge-rate-limiter",
+        "status": "optional",
+        "justifications": [
+          "Core infrastructure"
+        ],
+        "reason": null,
+        "suggestion": null
+      },
+      {
+        "nodeId": "api-gateway",
+        "status": "optional",
+        "justifications": [
+          "Core infrastructure"
+        ],
+        "reason": null,
+        "suggestion": null
+      },
+      {
+        "nodeId": "load-balancer-l7",
+        "status": "core",
+        "justifications": [
+          "Core infrastructure"
+        ],
+        "reason": null,
+        "suggestion": null
+      },
+      {
+        "nodeId": "app-service",
+        "status": "core",
+        "justifications": [
+          "User can perform core actions",
+          "User can perform core actions",
+          "User can perform core actions",
+          "User can perform core actions",
+          "User can perform core actions",
+          "User can perform core actions"
+        ],
+        "reason": null,
+        "suggestion": null
+      },
+      {
+        "nodeId": "stream-processor",
+        "status": "optional",
+        "justifications": [
+          "Core infrastructure"
+        ],
+        "reason": null,
+        "suggestion": null
+      },
+      {
+        "nodeId": "data-warehouse",
+        "status": "optional",
+        "justifications": [
+          "Core infrastructure"
+        ],
+        "reason": null,
+        "suggestion": null
+      },
+      {
+        "nodeId": "sql-db",
+        "status": "core",
+        "justifications": [
+          "Core infrastructure"
+        ],
+        "reason": null,
+        "suggestion": null
+      },
+      {
+        "nodeId": "sql-read-replica",
+        "status": "optional",
+        "justifications": [
+          "Core infrastructure"
+        ],
+        "reason": null,
+        "suggestion": null
+      },
+      {
+        "nodeId": "cache",
+        "status": "optional",
+        "justifications": [
+          "Core infrastructure"
+        ],
+        "reason": null,
+        "suggestion": null
+      },
+      {
+        "nodeId": "metrics",
+        "status": "optional",
+        "justifications": [
+          "Core infrastructure"
+        ],
+        "reason": null,
+        "suggestion": null
+      },
+      {
+        "nodeId": "logging",
+        "status": "optional",
+        "justifications": [
+          "Core infrastructure"
+        ],
+        "reason": null,
+        "suggestion": null
+      },
+      {
+        "nodeId": "queue",
+        "status": "optional",
+        "justifications": [
+          "Core infrastructure"
+        ],
+        "reason": null,
+        "suggestion": null
+      },
+      {
+        "nodeId": "auth-service",
+        "status": "optional",
+        "justifications": [
+          "Core infrastructure"
+        ],
+        "reason": null,
+        "suggestion": null
+      }
+    ],
+    "duplicates": [],
+    "summary": {
+      "totalNodes": 16,
+      "core": 4,
+      "optional": 12,
+      "unjustified": 0,
+      "duplicates": 0
+    },
+    "qualityReport": {
+      "missingCritical": [],
+      "unnecessary": [],
+      "risks": []
+    },
+    "valid": true
+  },
+  "qualityReport": {
+    "missingCritical": [],
+    "unnecessary": [],
+    "risks": []
+  },
+  "apiSketch": [
+    {
+      "method": "POST",
+      "path": "/api/create",
+      "purpose": "Create resource"
+    },
+    {
+      "method": "GET",
+      "path": "/api/:id",
+      "purpose": "Fetch resource"
+    },
+    {
+      "method": "GET",
+      "path": "/api/list",
+      "purpose": "List with pagination"
+    }
+  ],
+  "dataModel": [
+    {
+      "entity": "Resource",
+      "fields": [
+        "id",
+        "data",
+        "createdAt"
+      ]
+    },
+    {
+      "entity": "User",
+      "fields": [
+        "id",
+        "metadata"
+      ]
+    }
+  ],
+  "starterHints": [],
+  "baselineDesign": {
+    "nodes": [
+      {
+        "id": "web-app",
+        "position": {
+          "x": 250,
+          "y": 0
+        },
+        "data": {
+          "label": "Web App / UI",
+          "purpose": "Client-facing UI; calls APIs; manages user interactions.",
+          "defaults": {
+            "cache": "",
+            "prefetch": "",
+            "offlineMode": ""
+          },
+          "notes": {
+            "purpose": "Client-facing UI; calls APIs; manages user interactions.",
+            "keyDecisions": [
+              "Configure cache",
+              "Follow best practices for scale"
+            ],
+            "failureModes": [
+              "stale UI state",
+              "over-fetching"
+            ]
+          }
+        }
+      },
+      {
+        "id": "cdn",
+        "position": {
+          "x": 250,
+          "y": 80
+        },
+        "data": {
+          "label": "CDN",
+          "purpose": "Caches and serves static and cacheable dynamic content close to users; reduces origin load.",
+          "defaults": {
+            "cacheTTL": "",
+            "cacheKey": "",
+            "staleWhileRevalidate": "",
+            "purge": "",
+            "geoRestrictions": ""
+          },
+          "notes": {
+            "purpose": "Caches and serves static and cacheable dynamic content close to users; reduces origin load.",
+            "keyDecisions": [
+              "Cache media by content hash or path",
+              "Purge on update; stale-while-revalidate"
+            ],
+            "failureModes": [
+              "Cache poisoning",
+              "Origin overload on miss spike"
+            ]
+          }
+        }
+      },
+      {
+        "id": "waf",
+        "position": {
+          "x": 250,
+          "y": 160
+        },
+        "data": {
+          "label": "WAF",
+          "purpose": "Blocks common web attacks (SQLi/XSS), bots, and abusive patterns at the edge.",
+          "defaults": {
+            "rules": "",
+            "botProtection": "",
+            "ipAllowDeny": "",
+            "rateRules": ""
+          },
+          "notes": {
+            "purpose": "Blocks common web attacks (SQLi/XSS), bots, and abusive patterns at the edge.",
+            "keyDecisions": [
+              "Configure rules",
+              "Follow best practices for scale"
+            ],
+            "failureModes": [
+              "false positives blocking good traffic",
+              "rules drift"
+            ]
+          }
+        }
+      },
+      {
+        "id": "edge-rate-limiter",
+        "position": {
+          "x": 250,
+          "y": 240
+        },
+        "data": {
+          "label": "Rate Limiter",
+          "purpose": "Protects systems from overload and abuse; enforces per-user/IP/API limits.",
+          "defaults": {
+            "limitKey": "",
+            "limits": "",
+            "burst": "",
+            "window": "",
+            "tokenBucket": "",
+            "leakyBucket": ""
+          },
+          "notes": {
+            "purpose": "Protects systems from overload and abuse; enforces per-user/IP/API limits.",
+            "keyDecisions": [
+              "Token bucket or sliding window per user/IP",
+              "Distributed state (Redis) for global limits"
+            ],
+            "failureModes": [
+              "Hot keys on limiter storage",
+              "Incorrect keying causes unfair limits"
+            ]
+          }
+        }
+      },
+      {
+        "id": "api-gateway",
+        "position": {
+          "x": 250,
+          "y": 320
+        },
+        "data": {
+          "label": "API Gateway",
+          "purpose": "Single entry point for APIs; handles routing, auth, quotas, request shaping.",
+          "defaults": {
+            "routes": "",
+            "auth": "",
+            "quotas": "",
+            "timeouts": "",
+            "payloadLimits": ""
+          },
+          "notes": {
+            "purpose": "Single entry point for APIs; handles routing, auth, quotas, request shaping.",
+            "keyDecisions": [
+              "Route by path/version; validate auth before backend",
+              "Centralize rate limits and request shaping"
+            ],
+            "failureModes": [
+              "SPOF; deploy HA with health checks",
+              "Misconfigured routes cause 404/5xx"
+            ]
+          }
+        }
+      },
+      {
+        "id": "load-balancer-l7",
+        "position": {
+          "x": 250,
+          "y": 400
+        },
+        "data": {
+          "label": "Load Balancer (L7)",
+          "purpose": "Distributes HTTP traffic across healthy instances; supports routing rules.",
+          "defaults": {
+            "algorithm": "",
+            "healthChecks": "",
+            "timeouts": "",
+            "connectionDraining": ""
+          },
+          "notes": {
+            "purpose": "Distributes HTTP traffic across healthy instances; supports routing rules.",
+            "keyDecisions": [
+              "Configure algorithm",
+              "Follow best practices for scale"
+            ],
+            "failureModes": [
+              "bad health checks flapping",
+              "uneven load distribution"
+            ]
+          }
+        }
+      },
+      {
+        "id": "app-service",
+        "position": {
+          "x": 250,
+          "y": 480
+        },
+        "data": {
+          "label": "App Service",
+          "purpose": "Core business logic service handling requests and orchestrating dependencies.",
+          "defaults": {
+            "autoscaling": "",
+            "timeouts": "",
+            "retries": "",
+            "circuitBreaker": ""
+          },
+          "notes": {
+            "purpose": "Core business logic service handling requests and orchestrating dependencies.",
+            "keyDecisions": [
+              "Configure autoscaling",
+              "Follow best practices for scale"
+            ],
+            "failureModes": [
+              "dependency timeouts cascading",
+              "resource exhaustion"
+            ]
+          }
+        }
+      },
+      {
+        "id": "search-index",
+        "position": {
+          "x": 250,
+          "y": 560
+        },
+        "data": {
+          "label": "Search Index",
+          "purpose": "Supports text search, filtering, ranking; maintains inverted index.",
+          "defaults": {
+            "analyzers": "",
+            "ranking": "",
+            "shards": "",
+            "replicas": "",
+            "refreshInterval": ""
+          },
+          "notes": {
+            "purpose": "Supports text search, filtering, ranking; maintains inverted index.",
+            "keyDecisions": [
+              "Configure analyzers",
+              "Follow best practices for scale"
+            ],
+            "failureModes": [
+              "stale index",
+              "high write amplification"
+            ]
+          }
+        }
+      },
+      {
+        "id": "stream-processor",
+        "position": {
+          "x": 250,
+          "y": 640
+        },
+        "data": {
+          "label": "Stream Processor",
+          "purpose": "Processes streams for aggregation, enrichment, windowing; outputs derived streams.",
+          "defaults": {
+            "windowing": "",
+            "watermarks": "",
+            "stateStore": "",
+            "checkpointing": ""
+          },
+          "notes": {
+            "purpose": "Processes streams for aggregation, enrichment, windowing; outputs derived streams.",
+            "keyDecisions": [
+              "Configure windowing",
+              "Follow best practices for scale"
+            ],
+            "failureModes": [
+              "late events",
+              "state blowups"
+            ]
+          }
+        }
+      },
+      {
+        "id": "data-warehouse",
+        "position": {
+          "x": 250,
+          "y": 720
+        },
+        "data": {
+          "label": "Data Warehouse (OLAP)",
+          "purpose": "Columnar analytics store for BI queries; optimized for scans/aggregations.",
+          "defaults": {
+            "partitioning": "",
+            "clustering": "",
+            "retention": "",
+            "materializedViews": ""
+          },
+          "notes": {
+            "purpose": "Columnar analytics store for BI queries; optimized for scans/aggregations.",
+            "keyDecisions": [
+              "Configure partitioning",
+              "Follow best practices for scale"
+            ],
+            "failureModes": [
+              "expensive scans",
+              "bad partitioning"
+            ]
+          }
+        }
+      },
+      {
+        "id": "sql-db",
+        "position": {
+          "x": 250,
+          "y": 800
+        },
+        "data": {
+          "label": "SQL Database",
+          "purpose": "Relational storage with transactions and strong consistency options.",
+          "defaults": {
+            "indexes": "",
+            "replication": "",
+            "partitioning": "",
+            "connectionPool": "",
+            "isolationLevel": ""
+          },
+          "notes": {
+            "purpose": "Relational storage with transactions and strong consistency options.",
+            "keyDecisions": [
+              "Configure indexes",
+              "Follow best practices for scale"
+            ],
+            "failureModes": [
+              "lock contention",
+              "replication lag"
+            ]
+          }
+        }
+      },
+      {
+        "id": "sql-read-replica",
+        "position": {
+          "x": 250,
+          "y": 880
+        },
+        "data": {
+          "label": "SQL Read Replica",
+          "purpose": "Scales reads; offloads primary; may have replication lag.",
+          "defaults": {
+            "replicationMode": "",
+            "readRouting": "",
+            "lagBudget": ""
+          },
+          "notes": {
+            "purpose": "Scales reads; offloads primary; may have replication lag.",
+            "keyDecisions": [
+              "Configure replicationMode",
+              "Follow best practices for scale"
+            ],
+            "failureModes": [
+              "stale reads due to lag",
+              "failover complexity"
+            ]
+          }
+        }
+      },
+      {
+        "id": "cache",
+        "position": {
+          "x": 250,
+          "y": 960
+        },
+        "data": {
+          "label": "Cache",
+          "purpose": "Speeds reads and reduces backend load; stores computed/queried data.",
+          "defaults": {
+            "ttl": "",
+            "evictionPolicy": "",
+            "maxMemory": "",
+            "sharding": "",
+            "replication": ""
+          },
+          "notes": {
+            "purpose": "Speeds reads and reduces backend load; stores computed/queried data.",
+            "keyDecisions": [
+              "Cache-aside for conversation/metadata",
+              "TTL + invalidation stream for freshness"
+            ],
+            "failureModes": [
+              "Stampede on miss",
+              "Stale data after write"
+            ]
+          }
+        }
+      },
+      {
+        "id": "metrics",
+        "position": {
+          "x": 250,
+          "y": 1040
+        },
+        "data": {
+          "label": "Metrics",
+          "purpose": "Collects time-series measurements for monitoring and alerting.",
+          "defaults": {
+            "cardinalityGuards": "",
+            "scrapeInterval": "",
+            "retention": ""
+          },
+          "notes": {
+            "purpose": "Collects time-series measurements for monitoring and alerting.",
+            "keyDecisions": [
+              "Cardinality guards; sample high-volume metrics",
+              "SLI/SLO dashboards"
+            ],
+            "failureModes": [
+              "High cardinality costs",
+              "Missing metrics"
+            ]
+          }
+        }
+      },
+      {
+        "id": "logging",
+        "position": {
+          "x": 250,
+          "y": 1120
+        },
+        "data": {
+          "label": "Logging",
+          "purpose": "Stores logs for debugging/auditing; supports search and retention.",
+          "defaults": {
+            "sampling": "",
+            "retention": "",
+            "redaction": ""
+          },
+          "notes": {
+            "purpose": "Stores logs for debugging/auditing; supports search and retention.",
+            "keyDecisions": [
+              "Structured JSON; correlation IDs",
+              "Sampling for high-volume paths"
+            ],
+            "failureModes": [
+              "PII leakage",
+              "Cost explosion"
+            ]
+          }
+        }
+      },
+      {
+        "id": "queue",
+        "position": {
+          "x": 250,
+          "y": 1200
+        },
+        "data": {
+          "label": "queue"
+        }
+      },
+      {
+        "id": "auth-service",
+        "position": {
+          "x": 250,
+          "y": 1280
+        },
+        "data": {
+          "label": "auth-service"
+        }
+      }
+    ],
+    "edges": [
+      {
+        "id": "e-0-web-app-waf",
+        "source": "web-app",
+        "target": "waf"
+      },
+      {
+        "id": "e-1-waf-edge-rate-limiter",
+        "source": "waf",
+        "target": "edge-rate-limiter"
+      },
+      {
+        "id": "e-2-edge-rate-limiter-api-gateway",
+        "source": "edge-rate-limiter",
+        "target": "api-gateway"
+      },
+      {
+        "id": "e-3-api-gateway-load-balancer-l7",
+        "source": "api-gateway",
+        "target": "load-balancer-l7"
+      },
+      {
+        "id": "e-4-load-balancer-l7-app-service",
+        "source": "load-balancer-l7",
+        "target": "app-service"
+      },
+      {
+        "id": "e-5-app-service-cache",
+        "source": "app-service",
+        "target": "cache"
+      },
+      {
+        "id": "e-6-app-service-search-index",
+        "source": "app-service",
+        "target": "search-index"
+      },
+      {
+        "id": "e-7-app-service-sql-db",
+        "source": "app-service",
+        "target": "sql-db"
+      },
+      {
+        "id": "e-8-app-service-metrics",
+        "source": "app-service",
+        "target": "metrics"
+      },
+      {
+        "id": "e-9-app-service-logging",
+        "source": "app-service",
+        "target": "logging"
+      },
+      {
+        "id": "e-10-sql-db-sql-read-replica",
+        "source": "sql-db",
+        "target": "sql-read-replica"
+      },
+      {
+        "id": "e-11-app-service-cdn",
+        "source": "app-service",
+        "target": "cdn"
+      }
+    ]
+  },
+  "suggestedNodes": [
+    {
+      "type": "web-app",
+      "label": "Web App / UI",
+      "reason": "Client-facing UI; calls APIs; manages user interactions."
+    },
+    {
+      "type": "cdn",
+      "label": "CDN",
+      "reason": "Caches and serves static and cacheable dynamic content close to users; reduces origin load."
+    },
+    {
+      "type": "waf",
+      "label": "WAF",
+      "reason": "Blocks common web attacks (SQLi/XSS), bots, and abusive patterns at the edge."
+    },
+    {
+      "type": "edge-rate-limiter",
+      "label": "Rate Limiter",
+      "reason": "Protects systems from overload and abuse; enforces per-user/IP/API limits."
+    },
+    {
+      "type": "api-gateway",
+      "label": "API Gateway",
+      "reason": "Single entry point for APIs; handles routing, auth, quotas, request shaping."
+    },
+    {
+      "type": "load-balancer-l7",
+      "label": "Load Balancer (L7)",
+      "reason": "Distributes HTTP traffic across healthy instances; supports routing rules."
+    },
+    {
+      "type": "app-service",
+      "label": "App Service",
+      "reason": "Core business logic service handling requests and orchestrating dependencies."
+    },
+    {
+      "type": "stream-processor",
+      "label": "Stream Processor",
+      "reason": "Processes streams for aggregation, enrichment, windowing; outputs derived streams."
+    },
+    {
+      "type": "data-warehouse",
+      "label": "Data Warehouse (OLAP)",
+      "reason": "Columnar analytics store for BI queries; optimized for scans/aggregations."
+    },
+    {
+      "type": "sql-db",
+      "label": "SQL Database",
+      "reason": "Relational storage with transactions and strong consistency options."
+    },
+    {
+      "type": "sql-read-replica",
+      "label": "SQL Read Replica",
+      "reason": "Scales reads; offloads primary; may have replication lag."
+    },
+    {
+      "type": "cache",
+      "label": "Cache",
+      "reason": "Speeds reads and reduces backend load; stores computed/queried data."
+    },
+    {
+      "type": "metrics",
+      "label": "Metrics",
+      "reason": "Collects time-series measurements for monitoring and alerting."
+    },
+    {
+      "type": "logging",
+      "label": "Logging",
+      "reason": "Stores logs for debugging/auditing; supports search and retention."
+    },
+    {
+      "type": "default",
+      "label": "queue",
+      "reason": ""
+    },
+    {
+      "type": "default",
+      "label": "auth-service",
+      "reason": ""
+    }
+  ],
+  "suggestedEdges": [
+    {
+      "source": "web-app",
+      "target": "waf"
+    },
+    {
+      "source": "waf",
+      "target": "edge-rate-limiter"
+    },
+    {
+      "source": "edge-rate-limiter",
+      "target": "api-gateway"
+    },
+    {
+      "source": "api-gateway",
+      "target": "load-balancer-l7"
+    },
+    {
+      "source": "load-balancer-l7",
+      "target": "app-service"
+    },
+    {
+      "source": "app-service",
+      "target": "cache"
+    },
+    {
+      "source": "app-service",
+      "target": "sql-db"
+    },
+    {
+      "source": "app-service",
+      "target": "metrics"
+    },
+    {
+      "source": "app-service",
+      "target": "logging"
+    },
+    {
+      "source": "sql-db",
+      "target": "sql-read-replica"
+    },
+    {
+      "source": "app-service",
+      "target": "cdn"
+    }
+  ],
+  "packVersion": 2
+}

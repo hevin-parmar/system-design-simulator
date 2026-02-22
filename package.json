@@ -1,0 +1,27 @@
+{
+  "name": "system-design-simulator",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "server": "node server/index.js",
+    "simulate-interview": "node server/ai/simulateInterview.js",
+    "test:title": "node server/ai/tools/titleSanityCheck.js"
+  },
+  "dependencies": {
+    "@dagrejs/dagre": "^2.0.4",
+    "@xyflow/react": "^12.3.6",
+    "express": "^4.21.0",
+    "multer": "^2.0.2",
+    "pdfjs-dist": "^5.4.624",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.3.4",
+    "vite": "^6.0.3"
+  }
+}

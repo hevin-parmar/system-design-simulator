@@ -1,0 +1,89 @@
+.design-wizard-modal {
+  max-width: 540px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.design-wizard-modal__tabs {
+  display: flex;
+  gap: 4px;
+  padding: 0 20px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.design-wizard-modal__tab {
+  padding: 10px 16px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #64748b;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  margin-bottom: -1px;
+}
+
+.design-wizard-modal__tab:hover {
+  color: #0f172a;
+}
+
+.design-wizard-modal__tab--active {
+  color: #4f46e5;
+  border-bottom-color: #4f46e5;
+}
+
+.design-wizard-modal__body {
+  overflow-y: auto;
+  flex: 1;
+}
+
+.design-wizard-modal__error {
+  margin-bottom: 12px;
+  padding: 10px 14px;
+  background: #fef2f2;
+  color: #b91c1c;
+  font-size: 0.8125rem;
+  border-radius: 6px;
+}
+
+.design-wizard-modal__actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.wizard-field {
+  margin-bottom: 16px;
+}
+
+.wizard-field label {
+  display: block;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  margin-bottom: 6px;
+  color: #374151;
+}
+
+.wizard-field .required {
+  color: #dc2626;
+}
+
+.wizard-field input,
+.wizard-field textarea,
+.wizard-field__textarea {
+  width: 100%;
+  padding: 8px 12px;
+  font-size: 0.875rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  font-family: inherit;
+}
+
+.wizard-field textarea,
+.wizard-field__textarea {
+  resize: vertical;
+}

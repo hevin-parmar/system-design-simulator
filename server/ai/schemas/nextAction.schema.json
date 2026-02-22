@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "NextAction",
+  "type": "object",
+  "required": ["actionType", "questionText", "notes", "phase"],
+  "properties": {
+    "actionType": {
+      "type": "string",
+      "enum": ["ask_followup", "counter_question", "move_on", "flag_unnecessary", "clarify"]
+    },
+    "questionText": { "type": "string" },
+    "notes": { "type": "string" },
+    "flaggedNodeIds": { "type": "array", "items": { "type": "string" } },
+    "phase": {
+      "type": "string",
+      "enum": ["requirements", "high_level", "deep_dive", "bottlenecks", "tradeoffs"]
+    }
+  }
+}

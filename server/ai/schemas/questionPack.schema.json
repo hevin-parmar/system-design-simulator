@@ -1,0 +1,117 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "QuestionPack",
+  "type": "object",
+  "required": ["id", "title", "problemStatement", "functionalRequirements", "nonFunctionalRequirements"],
+  "properties": {
+    "id": { "type": "string" },
+    "title": { "type": "string", "maxLength": 80 },
+    "problemStatement": { "type": "string" },
+    "functionalRequirements": {
+      "type": "array",
+      "items": { "type": "string", "maxLength": 110 },
+      "minItems": 6,
+      "maxItems": 10
+    },
+    "nonFunctionalRequirements": {
+      "type": "array",
+      "items": { "type": "string", "maxLength": 110 },
+      "minItems": 6,
+      "maxItems": 10
+    },
+    "constraintsAssumptions": {
+      "type": "array",
+      "items": { "type": "string", "maxLength": 110 },
+      "minItems": 5,
+      "maxItems": 8
+    },
+    "apiSketch": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "method": { "type": "string" },
+          "path": { "type": "string" },
+          "purpose": { "type": "string", "maxLength": 80 }
+        }
+      },
+      "minItems": 3,
+      "maxItems": 6
+    },
+    "dataModel": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "entity": { "type": "string" },
+          "fields": {
+            "type": "array",
+            "items": { "type": "string", "maxLength": 60 }
+          }
+        }
+      },
+      "minItems": 3,
+      "maxItems": 6
+    },
+    "diagramSpec": {
+      "type": "object",
+      "properties": {
+        "nodes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "string" },
+              "type": { "type": "string" },
+              "label": { "type": "string" },
+              "category": { "type": "string" },
+              "details": {
+                "type": "object",
+                "properties": {
+                  "purpose": { "type": "string" },
+                  "defaults": { "type": "object" },
+                  "tradeoffs": { "type": "array", "items": { "type": "string" } }
+                }
+              }
+            }
+          }
+        },
+        "edges": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "source": { "type": "string" },
+              "target": { "type": "string" },
+              "label": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    "scoringRubric": {
+      "type": "array",
+      "items": { "type": "string", "maxLength": 110 },
+      "minItems": 6,
+      "maxItems": 10
+    },
+    "antiPatterns": {
+      "type": "array",
+      "items": { "type": "string", "maxLength": 110 },
+      "minItems": 5,
+      "maxItems": 8
+    },
+    "starterHints": {
+      "type": "array",
+      "items": { "type": "string", "maxLength": 110 },
+      "maxItems": 6
+    },
+    "baselineDesign": {
+      "type": "object",
+      "properties": {
+        "nodes": { "type": "array" },
+        "edges": { "type": "array" }
+      }
+    }
+  }
+}

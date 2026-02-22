@@ -1,0 +1,145 @@
+{
+  "docs": [
+    {
+      "id": "01_fundamentals",
+      "title": "System Design Fundamentals",
+      "chunkCount": 9
+    },
+    {
+      "id": "02_requirements",
+      "title": "Requirements Gathering",
+      "chunkCount": 9
+    },
+    {
+      "id": "03_capacity_estimation",
+      "title": "Capacity Estimation",
+      "chunkCount": 9
+    },
+    {
+      "id": "04_load_balancing",
+      "title": "Load Balancing",
+      "chunkCount": 9
+    },
+    {
+      "id": "05_caching",
+      "title": "Caching",
+      "chunkCount": 9
+    },
+    {
+      "id": "06_databases",
+      "title": "Databases",
+      "chunkCount": 9
+    },
+    {
+      "id": "07_sharding",
+      "title": "Sharding",
+      "chunkCount": 9
+    },
+    {
+      "id": "08_messaging_queues",
+      "title": "Messaging Queues",
+      "chunkCount": 9
+    },
+    {
+      "id": "09_search",
+      "title": "Search",
+      "chunkCount": 9
+    },
+    {
+      "id": "10_storage_cdn",
+      "title": "Storage & CDN",
+      "chunkCount": 9
+    },
+    {
+      "id": "11_consistency_reliability",
+      "title": "Consistency & Reliability",
+      "chunkCount": 9
+    },
+    {
+      "id": "12_observability_cost_security",
+      "title": "Observability, Cost & Security",
+      "chunkCount": 9
+    },
+    {
+      "id": "13_interview_playbook",
+      "title": "Interview Playbook",
+      "chunkCount": 9
+    },
+    {
+      "id": "caching",
+      "title": "caching",
+      "chunkCount": 8
+    },
+    {
+      "id": "capacity_estimation",
+      "title": "capacity estimation",
+      "chunkCount": 8
+    },
+    {
+      "id": "consistency",
+      "title": "consistency",
+      "chunkCount": 8
+    },
+    {
+      "id": "databases",
+      "title": "databases",
+      "chunkCount": 8
+    },
+    {
+      "id": "failure_modes",
+      "title": "failure modes",
+      "chunkCount": 8
+    },
+    {
+      "id": "foundations",
+      "title": "foundations",
+      "chunkCount": 8
+    },
+    {
+      "id": "fundamentals",
+      "title": "fundamentals",
+      "chunkCount": 10
+    },
+    {
+      "id": "interview_patterns",
+      "title": "interview patterns",
+      "chunkCount": 8
+    },
+    {
+      "id": "load_balancer",
+      "title": "load balancer",
+      "chunkCount": 8
+    },
+    {
+      "id": "message_queue",
+      "title": "message queue",
+      "chunkCount": 8
+    },
+    {
+      "id": "observability",
+      "title": "observability",
+      "chunkCount": 8
+    },
+    {
+      "id": "queues",
+      "title": "queues",
+      "chunkCount": 8
+    },
+    {
+      "id": "reliability",
+      "title": "reliability",
+      "chunkCount": 8
+    },
+    {
+      "id": "security",
+      "title": "security",
+      "chunkCount": 8
+    },
+    {
+      "id": "sharding",
+      "title": "sharding",
+      "chunkCount": 8
+    }
+  ],
+  "totalChunks": 239
+}

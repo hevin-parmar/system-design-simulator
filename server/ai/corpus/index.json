@@ -1,0 +1,17 @@
+{
+  "docs": [
+    {"id": "01_fundamentals", "title": "System Design Fundamentals", "tags": ["fundamentals", "scaling", "failure", "tradeoffs", "interview"]},
+    {"id": "02_requirements", "title": "Requirements Gathering", "tags": ["requirements", "functional", "non-functional", "clarify", "scope"]},
+    {"id": "03_capacity_estimation", "title": "Capacity Estimation", "tags": ["capacity", "qps", "storage", "bandwidth", "estimation", "numbers"]},
+    {"id": "04_load_balancing", "title": "Load Balancing", "tags": ["load-balancer", "L4", "L7", "health-checks", "routing", "availability"]},
+    {"id": "05_caching", "title": "Caching", "tags": ["cache", "ttl", "invalidation", "stampede", "consistency", "write-through", "write-back"]},
+    {"id": "06_databases", "title": "Databases", "tags": ["database", "replication", "primary", "replica", "consistency", "connection-pool"]},
+    {"id": "07_sharding", "title": "Sharding", "tags": ["sharding", "partition-key", "hot-partition", "resharding", "hash", "range"]},
+    {"id": "08_messaging_queues", "title": "Messaging Queues", "tags": ["queue", "message-queue", "dlq", "backpressure", "idempotency", "at-least-once", "delivery-semantics"]},
+    {"id": "09_search", "title": "Search", "tags": ["search", "index", "elasticsearch", "full-text", "relevancy"]},
+    {"id": "10_storage_cdn", "title": "Storage & CDN", "tags": ["storage", "cdn", "object-storage", "cache-invalidation", "edge"]},
+    {"id": "11_consistency_reliability", "title": "Consistency & Reliability", "tags": ["consistency", "availability", "quorum", "cap", "reliability"]},
+    {"id": "12_observability_cost_security", "title": "Observability, Cost & Security", "tags": ["observability", "slo", "tracing", "logging", "metrics", "security", "cost"]},
+    {"id": "13_interview_playbook", "title": "Interview Playbook", "tags": ["interview", "system-design", "patterns", "structure"]}
+  ]
+}
