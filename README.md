@@ -26,6 +26,35 @@ npm run dev
 
 Open [http://localhost:5173](http://localhost:5173) in your browser.
 
+## UI Overview
+
+### Main view
+![Main view](docs/screenshots/main-view.png)
+
+Three-panel layout: **Question Bank** (left), **flow diagram canvas** (center), **Requirements & Progress** (right). Header has New Design, Start Game, Admin, and Traffic Load slider.
+
+### Question Bank
+![Question Bank](docs/screenshots/question-bank.png)
+
+Left panel listing system design question packs. Search bar filters by title. Click a pack to load its suggested diagram and requirements.
+
+### Diagram canvas
+![Diagram with design](docs/screenshots/diagram-with-design.png)
+
+Node-based architecture diagram with layered layout (Edge → App → Async → Data → Observability). Click nodes to view notes; use Add Node, Delete, Auto-Layout, Reset, Undo.
+
+### Design Wizard
+![Design Wizard](docs/screenshots/design-wizard.png)
+
+Generate a new design from scratch. Enter title, problem statement, functional/non-functional requirements, and constraints. The Creator agent produces a production-grade diagram.
+
+---
+
+*To capture fresh screenshots (run `npm run server` and `npm run dev` first):*
+```bash
+node scripts/capture-screenshots.js
+```
+
 ## Data storage (survives server restart)
 
 All data is stored under `server/data/`:

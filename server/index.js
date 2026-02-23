@@ -14,6 +14,7 @@ import { regenerateAllPacks } from './ai/tools/regeneratePacks.js'
 import { createFromText, formatPack } from './ai/agents/CreatorAgent.js'
 import { synthesize } from './ai/designSynthesizer.js'
 import { getNextAction } from './ai/agents/InterviewerAgent.js'
+import { COMPONENT_LAYOUT } from './ai/knowledge/layeredLayout.js'
 import { getUploadPath, runTranscribe, buildMemory } from './ai/admin.js'
 import { ensureSession, onDiagramChanged, onUserAnswer } from './ai/interviewSession.js'
 import { buildCorpus } from './ai/tools/buildCorpus.js'
@@ -163,8 +164,25 @@ const NO_CACHE_HEADERS = {
 }
 
 // ---- Design (designId-centric) ----
+const LAYER_NAMES = { 1: 'edge', 2: 'app', 3: 'async', 4: 'data', 5: 'observability' }
+
 function randomId() {
   return `d-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 9)}`
+}
+
+function enrichNodeWithLayer(node) {
+  const id = node.id || node.type
+  const layout = COMPONENT_LAYOUT[id]
+  let layerName = node.data?.layer
+  if (!layerName) {
+    if (id === 'cache' || id === 'cache-invalidation') layerName = 'caching'
+    else {
+      const layerNum = layout?.layer ?? 2
+      layerName = LAYER_NAMES[layerNum] || 'app'
+    }
+  }
+  const data = { ...(node.data || {}), layer: layerName }
+  return { ...node, data }
 }
 
 function packToDiagramState(pack) {
@@ -173,11 +191,14 @@ function packToDiagramState(pack) {
   if (!graph?.nodes?.length && baselineDesign?.nodes?.length) graph = baselineDesign
   if (!graph?.nodes?.length && diagramSpec?.nodes?.length) {
     graph = {
-      nodes: (diagramSpec.nodes || []).map((n, i) => ({
-        id: n.id ?? n.type ?? `node-${i}`,
-        position: n.position ?? { x: 250, y: i * 80 },
-        data: { label: n.label ?? n.id, ...(n.details || {}), ...(n.data || {}) },
-      })),
+      nodes: (diagramSpec.nodes || []).map((n, i) => {
+        const node = {
+          id: n.id ?? n.type ?? `node-${i}`,
+          position: n.position ?? { x: 250, y: i * 80 },
+          data: { label: n.label ?? n.id, ...(n.details || {}), ...(n.data || {}) },
+        }
+        return enrichNodeWithLayer(node)
+      }),
       edges: (diagramSpec.edges || []).map((e, i) => ({
         id: `e-${i}-${e.source}-${e.target}`,
         source: e.source,
@@ -392,11 +413,19 @@ function handleReset(id) {
   let nodes = []
   let edges = []
   if (pack?.baselineDesign?.nodes?.length) {
-    nodes = pack.baselineDesign.nodes
+    nodes = (pack.baselineDesign.nodes || []).map(enrichNodeWithLayer)
     edges = pack.baselineDesign.edges || []
+  } else if (pack?.diagramSpec?.nodes?.length) {
+    const { diagramSpec } = pack
+    nodes = (diagramSpec.nodes || []).map((n, i) => enrichNodeWithLayer({
+      id: n.id ?? n.type ?? `node-${i}`,
+      position: n.position ?? { x: 250, y: i * 80 },
+      data: { label: n.label ?? n.id, ...(n.details || {}), ...(n.data || {}) },
+    }))
+    edges = (diagramSpec.edges || []).map((e, i) => ({ id: `e-${i}-${e.source}-${e.target}`, source: e.source, target: e.target }))
   } else if (pack?.suggestedNodes?.length && pack?.suggestedEdges) {
-    nodes = (pack.suggestedNodes || []).map((n, i) => ({
-      id: n.type,
+    nodes = (pack.suggestedNodes || []).map((n, i) => enrichNodeWithLayer({
+      id: n.type ?? n.id ?? `node-${i}`,
       position: { x: 250, y: i * 80 },
       data: { label: n.label || n.type },
     }))
@@ -407,7 +436,7 @@ function handleReset(id) {
     }))
   } else {
     const baseline = store.baselines?.[id]
-    nodes = baseline?.nodes ?? []
+    nodes = (baseline?.nodes ?? []).map(enrichNodeWithLayer)
     edges = baseline?.edges ?? []
   }
   store.drafts = store.drafts || {}

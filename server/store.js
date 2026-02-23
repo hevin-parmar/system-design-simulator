@@ -7,6 +7,7 @@ import { fileURLToPath } from 'url'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const STORE_PATH = path.join(__dirname, 'data', 'store.json')
+const DESIGNS_PATH = path.join(__dirname, 'data', 'designs.json')
 const LEGACY_QUESTIONS_PATH = path.join(__dirname, 'data', 'questions.json')
 
 const DEFAULT_STORE = {
@@ -16,8 +17,30 @@ const DEFAULT_STORE = {
   interviewSessions: {},
 }
 
-// Designs are in-memory only; never persisted. Server restart = empty designs.
 let designsInMemory = {}
+
+function loadDesignsFromDisk() {
+  try {
+    if (fs.existsSync(DESIGNS_PATH)) {
+      const raw = fs.readFileSync(DESIGNS_PATH, 'utf-8')
+      const data = JSON.parse(raw)
+      if (data && typeof data === 'object') return data
+    }
+  } catch (err) {
+    console.warn('loadDesigns failed:', err?.message)
+  }
+  return {}
+}
+
+function saveDesignsToDisk() {
+  try {
+    const dir = path.dirname(DESIGNS_PATH)
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true })
+    fs.writeFileSync(DESIGNS_PATH, JSON.stringify(designsInMemory, null, 2), 'utf-8')
+  } catch (err) {
+    console.warn('saveDesigns failed:', err?.message)
+  }
+}
 
 /**
  * Read store from disk. Returns default structure if file missing.
@@ -78,6 +101,7 @@ export function writeStore(store) {
 export function safeInitStore() {
   const store = readStore()
   writeStore(store)
+  designsInMemory = loadDesignsFromDisk()
 }
 
 /**
@@ -127,18 +151,20 @@ const EMPTY_DESIGN = {
 export function getOrCreateDesignState(designId) {
   if (!designsInMemory[designId]) {
     designsInMemory[designId] = {
-      ...EMPTY_DESIGN,
+      ...JSON.parse(JSON.stringify(EMPTY_DESIGN)),
       createdAt: new Date().toISOString(),
     }
+    saveDesignsToDisk()
   }
   return designsInMemory[designId]
 }
 
 export function resetDesignState(designId) {
   designsInMemory[designId] = {
-    ...EMPTY_DESIGN,
+    ...JSON.parse(JSON.stringify(EMPTY_DESIGN)),
     createdAt: new Date().toISOString(),
   }
+  saveDesignsToDisk()
   return designsInMemory[designId]
 }
 
@@ -147,7 +173,8 @@ export function getDesignState(designId) {
 }
 
 export function updateDesignState(designId, updates) {
-  const current = designsInMemory[designId] || { ...EMPTY_DESIGN, createdAt: new Date().toISOString() }
+  const current = designsInMemory[designId] || { ...JSON.parse(JSON.stringify(EMPTY_DESIGN)), createdAt: new Date().toISOString() }
   designsInMemory[designId] = { ...current, ...updates }
+  saveDesignsToDisk()
   return designsInMemory[designId]
 }

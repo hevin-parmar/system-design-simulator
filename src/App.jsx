@@ -8,11 +8,33 @@ import AdminModal from './components/AdminModal'
 import DesignWizardModal from './components/DesignWizardModal'
 import { processQuestions } from './utils/processQuestion'
 import { getLayoutedElements } from './utils/dagreLayout'
+import { getLayerLayoutedElements } from './utils/layerLayout'
 import { computeUnnecessaryNodeIds } from './utils/gameLogic'
 import { isAdminUnlocked } from './utils/adminAuth'
 
 const API_BASE = 'http://localhost:3000'
 const EMPTY_GRAPH = { nodes: [], edges: [] }
+const SESSION_KEY = 'system-design-session'
+
+function loadSession() {
+  try {
+    const raw = localStorage.getItem(SESSION_KEY)
+    if (!raw) return null
+    const s = JSON.parse(raw)
+    return (s?.designId && s?.designId.startsWith('d-')) ? s : null
+  } catch { return null }
+}
+
+function saveSession(designId, packId) {
+  try {
+    localStorage.setItem(SESSION_KEY, JSON.stringify({ designId: designId || null, packId: packId || null }))
+  } catch { /* ignore */ }
+}
+
+function applyLayout(nodes, edges) {
+  const hasLayer = nodes?.some((n) => n.data?.layer)
+  return hasLayer ? getLayerLayoutedElements(nodes, edges) : getLayoutedElements(nodes, edges, 'TB')
+}
 
 function formatTraffic(value) {
   if (value >= 1e6) return `${value / 1e6}M`
@@ -47,6 +69,7 @@ function App() {
   const diagramChangeTimer = useRef(null)
   const designIdRef = useRef(designId)
   const skipLoadRef = useRef(false)
+  const restoredFromSessionRef = useRef(false)
 
   const unnecessaryNodeIds = computeUnnecessaryNodeIds(nodes, edges)
 
@@ -55,6 +78,12 @@ function App() {
   useEffect(() => {
     localStorage.setItem('leftOpen', JSON.stringify(leftOpen))
   }, [leftOpen])
+
+  useEffect(() => {
+    if (designId || selectedQuestion?.id) {
+      saveSession(designId, selectedQuestion?.id ?? null)
+    }
+  }, [designId, selectedQuestion?.id])
   useEffect(() => {
     localStorage.setItem('rightOpen', JSON.stringify(rightOpen))
   }, [rightOpen])
@@ -119,16 +148,70 @@ function App() {
 
   useEffect(() => {
     let cancelled = false
-    fetchNewDesignId().then((id) => {
-      if (!cancelled && id) setDesignId(id)
-    })
+    const session = loadSession()
+    if (session?.designId && session?.packId) {
+      restoredFromSessionRef.current = true
+    }
+    if (session?.designId) {
+      fetch(`${API_BASE}/api/design/${session.designId}`)
+        .then((r) => r.ok ? r.json() : null)
+        .then((state) => {
+          if (cancelled) return
+          if (state?.nodes?.length || state?.edges?.length) {
+            setDesignId(session.designId)
+            return true
+          }
+          restoredFromSessionRef.current = false
+          return false
+        })
+        .catch(() => {
+          if (!cancelled) restoredFromSessionRef.current = false
+          return false
+        })
+        .then((restored) => {
+          if (cancelled) return
+          if (!restored) {
+            if (session?.packId) {
+              loadDesignFromPack(session.packId).then((result) => {
+                if (cancelled || !result) return
+                const { designId: newId, state, pack } = result
+                skipLoadRef.current = true
+                setDesignId(newId)
+                setCurrentPack(pack)
+                const n = state?.nodes?.length ? state.nodes : EMPTY_GRAPH.nodes
+                const e = state?.edges?.length ? state.edges : EMPTY_GRAPH.edges
+                const { nodes: layouted, edges: layoutedEdges } = applyLayout(
+                  JSON.parse(JSON.stringify(n)),
+                  JSON.parse(JSON.stringify(e))
+                )
+                setNodes(layouted)
+                setEdges(layoutedEdges)
+                setInitialGraph({ nodes: layouted, edges: layoutedEdges })
+              })
+            } else {
+              fetchNewDesignId().then((id) => { if (!cancelled && id) setDesignId(id) })
+            }
+          }
+        })
+    } else {
+      fetchNewDesignId().then((id) => {
+        if (!cancelled && id) setDesignId(id)
+      })
+    }
     return () => { cancelled = true }
-  }, [])
+  }, [loadDesignFromPack])
 
   useEffect(() => {
     let cancelled = false
     refreshQuestions().then((merged) => {
-      if (!cancelled && merged?.length && !selectedQuestion) setSelectedQuestion(merged[0])
+      if (cancelled) return
+      const session = loadSession()
+      if (session?.packId && merged?.length) {
+        const pack = merged.find((q) => q.id === session.packId)
+        if (pack) setSelectedQuestion(pack)
+      } else if (merged?.length && !selectedQuestion) {
+        setSelectedQuestion(merged[0])
+      }
     })
     return () => { cancelled = true }
   }, [])
@@ -142,10 +225,9 @@ function App() {
       if (designIdRef.current !== dId) return
       const n = state.nodes?.length ? state.nodes : EMPTY_GRAPH.nodes
       const e = state.edges?.length ? state.edges : EMPTY_GRAPH.edges
-      const { nodes: layouted, edges: layoutedEdges } = getLayoutedElements(
+      const { nodes: layouted, edges: layoutedEdges } = applyLayout(
         JSON.parse(JSON.stringify(n)),
-        JSON.parse(JSON.stringify(e)),
-        'TB'
+        JSON.parse(JSON.stringify(e))
       )
       if (designIdRef.current !== dId) return
       setNodes(layouted)
@@ -168,6 +250,11 @@ function App() {
 
   useEffect(() => {
     if (!selectedQuestion?.id) return
+    const session = loadSession()
+    if (restoredFromSessionRef.current && session?.packId === selectedQuestion.id) {
+      restoredFromSessionRef.current = false
+      return
+    }
     let cancelled = false
     setLoadingQuestion(true)
     loadDesignFromPack(selectedQuestion.id).then((result) => {
@@ -185,10 +272,9 @@ function App() {
       setDesignId(newId)
       const n = state?.nodes?.length ? state.nodes : EMPTY_GRAPH.nodes
       const e = state?.edges?.length ? state.edges : EMPTY_GRAPH.edges
-      const { nodes: layouted, edges: layoutedEdges } = getLayoutedElements(
+      const { nodes: layouted, edges: layoutedEdges } = applyLayout(
         JSON.parse(JSON.stringify(n)),
-        JSON.parse(JSON.stringify(e)),
-        'TB'
+        JSON.parse(JSON.stringify(e))
       )
       setNodes(layouted)
       setEdges(layoutedEdges)
@@ -337,7 +423,7 @@ function App() {
         source: e.source,
         target: e.target,
       }))
-      const { nodes: layouted, edges: layoutedEdges } = getLayoutedElements(nodes, edges, 'TB')
+      const { nodes: layouted, edges: layoutedEdges } = applyLayout(nodes, edges)
       setNodes(layouted)
       setEdges(layoutedEdges)
       setInitialGraph({ nodes: layouted, edges: layoutedEdges })
@@ -355,7 +441,7 @@ function App() {
         const state = await res.json()
         const n = state.nodes?.length ? state.nodes : EMPTY_GRAPH.nodes
         const e = state.edges?.length ? state.edges : EMPTY_GRAPH.edges
-        const { nodes: layouted, edges: layoutedEdges } = getLayoutedElements(JSON.parse(JSON.stringify(n)), JSON.parse(JSON.stringify(e)), 'TB')
+        const { nodes: layouted, edges: layoutedEdges } = applyLayout(JSON.parse(JSON.stringify(n)), JSON.parse(JSON.stringify(e)))
         setNodes(layouted)
         setEdges(layoutedEdges)
         setInitialGraph({ nodes: layouted, edges: layoutedEdges })
@@ -373,10 +459,9 @@ function App() {
       const { nodes: resetNodes, edges: resetEdges } = await res.json()
       const toUse = resetNodes?.length ? resetNodes : initialGraph.nodes
       const toUseEdges = resetEdges?.length ? resetEdges : initialGraph.edges
-      const { nodes: layouted, edges: layoutedEdges } = getLayoutedElements(
+      const { nodes: layouted, edges: layoutedEdges } = applyLayout(
         JSON.parse(JSON.stringify(toUse)),
-        JSON.parse(JSON.stringify(toUseEdges)),
-        'TB'
+        JSON.parse(JSON.stringify(toUseEdges))
       )
       setNodes(layouted)
       setEdges(layoutedEdges)
@@ -390,10 +475,9 @@ function App() {
         body: JSON.stringify({}),
       }).catch(() => null)
       const toUse = fallbackRes ? await fallbackRes.json().catch(() => ({})) : initialGraph
-      const { nodes: layouted, edges: layoutedEdges } = getLayoutedElements(
+      const { nodes: layouted, edges: layoutedEdges } = applyLayout(
         toUse.nodes || initialGraph.nodes,
-        toUse.edges || initialGraph.edges,
-        'TB'
+        toUse.edges || initialGraph.edges
       )
       setNodes(layouted)
       setEdges(layoutedEdges)
