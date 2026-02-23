@@ -195,9 +195,17 @@ function buildLayeredDiagram(context, pack) {
     for (const id of fn(context)) add(id, layerName)
   }
 
-  if (nodes.length < 12) {
-    for (const id of ['dns', 'policy-authorization', 'scheduler']) {
-      if (!added.has(id)) add(id, 'edge')
+  if (nodes.length < 14) {
+    const extras = [
+      ['dns', 'edge'],
+      ['policy-authorization', 'app'],
+      ['scheduler', 'background'],
+      ['circuit-breaker', 'resilience'],
+      ['retry-policy', 'resilience'],
+      ['bulkhead', 'resilience'],
+    ]
+    for (const [id, layer] of extras) {
+      if (!added.has(id)) add(id, layer)
     }
   }
 

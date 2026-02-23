@@ -745,12 +745,13 @@ function buildDiagramSpec(signals, tags, text, funcReqs, nfReqs, constraints) {
   add('logging')
   if (signals.latencySensitive && signals.qps >= 10000) add('tracing')
 
-  // F) Minimum 10 components for PRO-level designs; ensure observability
-  const minComponents = 10
+  // F) PRO-level: minimum 12 components, full observability, resilience
+  const minComponents = 12
   if (!added.has('metrics')) add('metrics')
   if (!added.has('logging')) add('logging')
+  if (!added.has('tracing') && signals.latencySensitive) add('tracing')
   if (nodes.length < minComponents) {
-    const extra = ['dlq', 'cache', 'sql-read-replica', 'dns', 'policy-authorization', 'scheduler', 'time-series-db', 'bulkhead']
+    const extra = ['dlq', 'cache', 'sql-read-replica', 'dns', 'policy-authorization', 'scheduler', 'time-series-db', 'bulkhead', 'cdn', 'circuit-breaker', 'retry-policy', 'cache-invalidation']
     for (const id of extra) {
       if (nodes.length >= minComponents) break
       add(id)
